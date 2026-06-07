@@ -423,7 +423,7 @@ export function IntradayChart({
           Sell
         </button>
       </div>
-      <img src="/logo.png" alt="" className="pointer-events-none absolute bottom-2 left-2 size-8 opacity-60" />
+      <img src="/logo.png" alt="" className="pointer-events-none ml-2 mb-1 size-8 opacity-60" />
     </div>
   );
 }

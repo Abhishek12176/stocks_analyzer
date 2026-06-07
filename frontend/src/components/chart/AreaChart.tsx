@@ -92,7 +92,7 @@ export function AreaChart({ data, lineColor = "#22C55E", topColor = "rgba(34, 19
         ref={containerRef}
         className={loading || data.length === 0 ? "hidden" : ""}
       />
-      <img src="/logo.png" alt="" className="pointer-events-none absolute bottom-2 left-2 size-8 opacity-60" />
+      <img src="/logo.png" alt="" className="pointer-events-none ml-2 mb-1 size-8 opacity-60" />
     </div>
   );
 }
