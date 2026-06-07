@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8000";
+// In production, set BACKEND_URL on Vercel to https://stocks-analyzer-9fg7.onrender.com
+// For local dev, create a .env.local file with BACKEND_URL=http://localhost:8000
+const BACKEND_URL = process.env.BACKEND_URL || "https://stocks-analyzer-9fg7.onrender.com";
 
 export async function GET(
   request: NextRequest,

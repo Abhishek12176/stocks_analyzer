@@ -16,7 +16,7 @@ services:
       - key: PORT
         value: "8000"
       - key: CORS_ORIGINS
-        value: https://equitylens.vercel.app
+        value: http://localhost:3000,https://stocks-analyzer-9fg7.onrender.com
       - key: NEWSDATA_API_KEY
         sync: false
       - key: RATE_LIMIT_PER_MINUTE
