@@ -82,7 +82,7 @@ export function LineChart({ data, color = "#3B82F6", height = 120, loading }: Li
         ref={containerRef}
         className={loading || data.length === 0 ? "hidden" : ""}
       />
-      <img src="/logo.png" alt="" className="pointer-events-none absolute bottom-1 right-1 size-5 opacity-60" />
+      <img src="/logo.png" alt="" className="pointer-events-none absolute bottom-1 left-1 size-7 opacity-60" />
     </div>
   );
 }

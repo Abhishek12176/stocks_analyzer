@@ -225,7 +225,7 @@ export function CandlestickChart({ data, volumeData, height = 400, loading }: Ca
           {isFullscreen ? "Exit" : "Fullscreen"}
         </button>
       )}
-      <img src="/logo.png" alt="" className="pointer-events-none absolute bottom-2 right-2 size-6 opacity-60" />
+      <img src="/logo.png" alt="" className="pointer-events-none absolute bottom-2 left-2 size-8 opacity-60" />
     </div>
   );
 }
