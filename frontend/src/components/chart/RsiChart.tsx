@@ -145,7 +145,7 @@ export function RsiChart({ history, loading, height = 180 }: RsiChartProps) {
   return (
     <div className="relative">
       <div ref={containerRef} />
-      <img src="/logo.png" alt="" className="pointer-events-none absolute bottom-2 right-2 size-5 opacity-20" />
+      <img src="/logo.png" alt="" className="pointer-events-none absolute bottom-2 right-2 size-6 opacity-60" />
       <div className="absolute top-2 left-3 flex items-center gap-3 pointer-events-none">
         <span className="flex items-center gap-1.5 text-[10px] text-neutral-500">
           <span className="size-2 rounded-full bg-signal-bearish/60" /> Overbought 70
