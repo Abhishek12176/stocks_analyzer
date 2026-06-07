@@ -23,6 +23,9 @@ node_modules/
 .next/
 out/
 
+# TypeScript
+*.tsbuildinfo
+
 # Backend data (ephemeral runtime data)
 backend/data/
 
