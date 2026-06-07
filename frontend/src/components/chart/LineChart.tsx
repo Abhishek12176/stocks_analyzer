@@ -24,6 +24,7 @@ export function LineChart({ data, color = "#3B82F6", height = 120, loading }: Li
         textColor: "#64708A",
         fontSize: 10,
         fontFamily: "JetBrains Mono, SF Mono, Consolas, monospace",
+        attributionLogo: false,
       },
       grid: {
         vertLines: { color: "transparent" },
@@ -81,6 +82,7 @@ export function LineChart({ data, color = "#3B82F6", height = 120, loading }: Li
         ref={containerRef}
         className={loading || data.length === 0 ? "hidden" : ""}
       />
+      <img src="/logo.png" alt="" className="pointer-events-none absolute bottom-1 right-1 size-4 opacity-20" />
     </div>
   );
 }

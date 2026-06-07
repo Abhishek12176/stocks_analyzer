@@ -111,6 +111,7 @@ export function IntradayChart({
         textColor: "#64708A",
         fontSize: 11,
         fontFamily: "JetBrains Mono, SF Mono, Consolas, monospace",
+        attributionLogo: false,
       },
       grid: {
         vertLines: { color: "#1F2937" },
@@ -256,7 +257,7 @@ export function IntradayChart({
   }, [data, chartReady, signals]);
 
   return (
-    <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 overflow-hidden">
+    <div className="relative rounded-xl border border-neutral-800 bg-neutral-900/50 overflow-hidden">
       <div className="px-5 py-4 border-b border-neutral-800">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-4">
@@ -422,6 +423,7 @@ export function IntradayChart({
           Sell
         </button>
       </div>
+      <img src="/logo.png" alt="" className="pointer-events-none absolute bottom-2 right-2 size-5 opacity-20" />
     </div>
   );
 }

@@ -26,6 +26,7 @@ export function AreaChart({ data, lineColor = "#22C55E", topColor = "rgba(34, 19
         textColor: "#64708A",
         fontSize: 11,
         fontFamily: "JetBrains Mono, SF Mono, Consolas, monospace",
+        attributionLogo: false,
       },
       grid: {
         vertLines: { color: "#1F2937" },
@@ -91,6 +92,7 @@ export function AreaChart({ data, lineColor = "#22C55E", topColor = "rgba(34, 19
         ref={containerRef}
         className={loading || data.length === 0 ? "hidden" : ""}
       />
+      <img src="/logo.png" alt="" className="pointer-events-none absolute bottom-2 right-2 size-5 opacity-20" />
     </div>
   );
 }

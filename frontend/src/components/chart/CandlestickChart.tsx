@@ -48,6 +48,7 @@ export function CandlestickChart({ data, volumeData, height = 400, loading }: Ca
         textColor: "#64708A",
         fontSize: 11,
         fontFamily: "JetBrains Mono, SF Mono, Consolas, monospace",
+        attributionLogo: false,
       },
       grid: {
         vertLines: { color: "#1F2937" },
@@ -224,6 +225,7 @@ export function CandlestickChart({ data, volumeData, height = 400, loading }: Ca
           {isFullscreen ? "Exit" : "Fullscreen"}
         </button>
       )}
+      <img src="/logo.png" alt="" className="pointer-events-none absolute bottom-2 right-2 size-5 opacity-20" />
     </div>
   );
 }
