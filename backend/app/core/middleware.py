@@ -1,7 +1,12 @@
+import logging
 import time
+
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
+
 from app.core.rate_limiter import rate_limiter
+
+logger = logging.getLogger("equitylens.middleware")
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
@@ -15,4 +20,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         elapsed = time.time() - start
 
         response.headers["X-Response-Time"] = f"{elapsed:.3f}s"
+
+        if elapsed > 2.0:
+            logger.warning(
+                "Slow request: %s %s took %.3fs", request.method, request.url.path, elapsed
+            )
+
         return response

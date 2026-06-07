@@ -1,14 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  async rewrites() {
-    return [
-      {
-        source: "/api/:path*",
-        destination: "http://localhost:8000/api/:path*",
-      },
-    ];
-  },
+  // API requests are proxied via src/app/api/[...path]/route.ts
+  // which reads BACKEND_URL from environment variables.
+  // This decouples the frontend build from the backend URL and
+  // works identically in development and production.
 };
 
 export default nextConfig;

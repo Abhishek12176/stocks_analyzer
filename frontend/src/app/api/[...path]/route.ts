@@ -9,7 +9,7 @@ export async function GET(
   const { path } = await params;
   const pathname = path.join("/");
   const searchParams = request.nextUrl.searchParams.toString();
-  const url = `${BACKEND_URL}/api/v1/${pathname}${searchParams ? `?${searchParams}` : ""}`;
+  const url = `${BACKEND_URL}/api/${pathname}${searchParams ? `?${searchParams}` : ""}`;
 
   try {
     const response = await fetch(url, {
@@ -47,7 +47,7 @@ export async function POST(
 ) {
   const { path } = await params;
   const pathname = path.join("/");
-  const url = `${BACKEND_URL}/api/v1/${pathname}`;
+  const url = `${BACKEND_URL}/api/${pathname}`;
 
   try {
     const body = await request.json();
@@ -82,7 +82,7 @@ export async function DELETE(
 ) {
   const { path } = await params;
   const pathname = path.join("/");
-  const url = `${BACKEND_URL}/api/v1/${pathname}`;
+  const url = `${BACKEND_URL}/api/${pathname}`;
 
   try {
     const response = await fetch(url, {

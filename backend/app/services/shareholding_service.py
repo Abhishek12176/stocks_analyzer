@@ -1,7 +1,15 @@
+import logging
+
 import yfinance as yf
 from typing import Optional
+
 from app.services.cache_service import cache_service
-from app.schemas.shareholding import ShareholdingResponse, QuarterlyHolding, LatestHolding, MajorShareholder
+from app.schemas.shareholding import (
+    ShareholdingResponse,
+    QuarterlyHolding,
+    LatestHolding,
+    MajorShareholder,
+)
 from app.services.screener_service import (
     fetch_shareholding_from_screener,
     fetch_major_shareholders_from_screener,
@@ -10,6 +18,8 @@ from app.services.marketsmith_service import fetch_major_shareholders_from_marke
 from app.services.moneycontrol_service import fetch_major_shareholders_from_moneycontrol
 from app.services.nse_service import fetch_major_shareholders_from_nse
 from app.utils.validators import add_exchange_suffix
+
+logger = logging.getLogger("equitylens.shareholding")
 
 FALLBACK_QUARTERS = [
     "Jun 2023", "Sep 2023", "Dec 2023", "Mar 2024",
@@ -93,7 +103,8 @@ def _fetch_shareholding_from_yfinance(symbol: str) -> Optional[ShareholdingRespo
             major_shareholders=major_shareholders if major_shareholders else [],
             source="yfinance",
         )
-    except Exception:
+    except Exception as exc:
+        logger.warning("yFinance shareholding unavailable for %s: %s", symbol, exc)
         return None
 
 
@@ -108,8 +119,10 @@ def _fetch_major_shareholders_multi_source(symbol: str) -> tuple:
         try:
             result = fetcher(symbol, limit=10)
             if result:
+                logger.debug("Got major shareholders from %s for %s", source_name, symbol)
                 return result, source_name
-        except Exception:
+        except Exception as exc:
+            logger.debug("Source %s failed for %s: %s", source_name, symbol, exc)
             continue
     return None, None
 
@@ -123,14 +136,14 @@ def fetch_shareholding_data(symbol: str) -> Optional[ShareholdingResponse]:
     screener_data = None
     try:
         screener_data = fetch_shareholding_from_screener(symbol)
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("Screener shareholding failed for %s: %s", symbol, exc)
 
     major_holders, major_source = None, None
     try:
         major_holders, major_source = _fetch_major_shareholders_multi_source(symbol)
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("Major shareholders fetch failed for %s: %s", symbol, exc)
 
     if screener_data or major_holders:
         quarterly_data = []

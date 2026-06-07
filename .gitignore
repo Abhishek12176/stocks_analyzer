@@ -1,13 +1,20 @@
 # Python
 __pycache__/
 *.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
 
 # Virtual Environment
 venv/
 .venv/
+env/
 
 # Environment Variables
 .env
+backend/.env
+frontend/.env.local
 
 # Node Modules
 node_modules/
@@ -16,9 +23,21 @@ node_modules/
 .next/
 out/
 
+# Backend data (ephemeral runtime data)
+backend/data/
+
 # VS Code
 .vscode/
+
+# IDE
+.idea/
+*.swp
+*.swo
 
 # OS Files
 Thumbs.db
 .DS_Store
+
+# Logs
+*.log
+logs/
