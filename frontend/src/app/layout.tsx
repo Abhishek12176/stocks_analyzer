@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   title: "AVORA — Stock Analysis Platform",
   description:
     "Premium Indian stock analysis platform combining technical, fundamental, ownership, and news data into actionable trade signals.",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({

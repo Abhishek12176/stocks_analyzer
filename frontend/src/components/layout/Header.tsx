@@ -114,7 +114,7 @@ export function Header() {
 
         {/* Profile */}
         <button className="flex items-center gap-2 rounded-xl p-1.5 text-neutral-500 hover:bg-neutral-800/50 transition-colors">
-          <img src="/logo.png" alt="AVORA" className="size-8 rounded-lg" />
+          <img src="/logo.png" alt="AVORA" className="size-8 rounded-lg animate-logo-glow" />
         </button>
       </div>
     </motion.header>

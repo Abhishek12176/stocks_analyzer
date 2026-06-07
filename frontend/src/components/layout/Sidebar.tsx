@@ -106,10 +106,10 @@ export function Sidebar() {
       {/* Logo */}
       <div className={cn("flex h-14 items-center border-b border-neutral-800 px-4", collapsed && "justify-center px-0")}>
         {collapsed ? (
-          <img src="/logo.png" alt="AVORA" className="size-7 rounded-lg" />
+          <img src="/logo.png" alt="AVORA" className="size-7 rounded-lg animate-logo-glow" />
         ) : (
           <Link href="/" className="flex items-center gap-2.5">
-            <img src="/logo.png" alt="AVORA" className="size-7 rounded-lg" />
+            <img src="/logo.png" alt="AVORA" className="size-7 rounded-lg animate-logo-glow" />
             <span className="text-base font-semibold text-neutral-50">AVORA</span>
           </Link>
         )}

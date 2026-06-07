@@ -42,6 +42,7 @@
   --animate-glow-pulse: glow-pulse 2s ease-in-out infinite;
   --animate-float: float 3s ease-in-out infinite;
   --animate-price-pulse: price-pulse 1.5s ease-in-out infinite;
+  --animate-logo-glow: logo-glow 2.5s ease-in-out infinite;
 
   @keyframes shimmer {
     0% { background-position: -200% 0; }
@@ -70,6 +71,10 @@
   @keyframes price-pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.6; }
+  }
+  @keyframes logo-glow {
+    0%, 100% { box-shadow: 0 0 8px rgba(59,130,246,0.3); filter: brightness(1); }
+    50% { box-shadow: 0 0 20px rgba(59,130,246,0.6); filter: brightness(1.15); }
   }
 }
 

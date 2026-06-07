@@ -183,6 +183,12 @@ export default function DashboardPage() {
         transition={{ duration: 0.3 }}
         className="text-center space-y-4 pt-4 pb-2"
       >
+        <div className="flex items-center justify-center gap-3 mb-3">
+          <div className="relative">
+            <div className="absolute inset-0 size-16 rounded-2xl bg-accent-500/20 blur-xl animate-logo-glow" />
+            <img src="/logo.png" alt="AVORA" className="size-16 rounded-2xl relative" />
+          </div>
+        </div>
         <h1 className="text-3xl font-bold text-neutral-50 tracking-[-1px]">
           AVORA Dashboard
         </h1>
