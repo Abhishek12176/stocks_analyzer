@@ -49,11 +49,11 @@ export default function OnboardingPage() {
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-accent-500/10 mb-6">
             <span className="font-mono text-3xl font-bold text-accent-500">
-              E
+              A
             </span>
           </div>
           <h1 className="text-3xl font-bold text-neutral-100">
-            Welcome to EquityLens
+            Welcome to AVORA
           </h1>
           <p className="mt-3 text-neutral-500 max-w-md mx-auto leading-relaxed">
             Your premium Indian stock analysis platform. Get actionable trade

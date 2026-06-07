@@ -3,7 +3,7 @@ import "@/styles/globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "EquityLens — Stock Analysis Platform",
+  title: "AVORA — Stock Analysis Platform",
   description:
     "Premium Indian stock analysis platform combining technical, fundamental, ownership, and news data into actionable trade signals.",
 };

@@ -106,13 +106,13 @@ export function Sidebar() {
       {/* Logo */}
       <div className={cn("flex h-14 items-center border-b border-neutral-800 px-4", collapsed && "justify-center px-0")}>
         {collapsed ? (
-          <span className="font-mono text-xl font-bold text-accent-500">E</span>
+          <span className="font-mono text-xl font-bold text-accent-500">A</span>
         ) : (
           <Link href="/" className="flex items-center gap-2.5">
             <div className="flex size-7 items-center justify-center rounded-lg bg-gradient-to-br from-accent-500 to-purple-500">
-              <span className="font-mono text-sm font-bold text-white">E</span>
+              <span className="font-mono text-sm font-bold text-white">A</span>
             </div>
-            <span className="text-base font-semibold text-neutral-50">EquityLens</span>
+            <span className="text-base font-semibold text-neutral-50">AVORA</span>
           </Link>
         )}
       </div>

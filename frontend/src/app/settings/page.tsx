@@ -68,7 +68,7 @@ export default function SettingsPage() {
           </h2>
           <div className="rounded-xl border border-neutral-800 p-5">
             <p className="text-sm text-neutral-500">
-              EquityLens v0.1.0 — Premium Indian Stock Analysis Platform
+              AVORA v0.1.0 — Premium Indian Stock Analysis Platform
             </p>
           </div>
         </section>

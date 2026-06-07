@@ -184,7 +184,7 @@ export default function DashboardPage() {
         className="text-center space-y-4 pt-4 pb-2"
       >
         <h1 className="text-3xl font-bold text-neutral-50 tracking-[-1px]">
-          EquityLens Dashboard
+          AVORA Dashboard
         </h1>
         <p className="text-neutral-500 text-sm">
           Research, analyze, and track Indian stocks with institutional-grade tools
