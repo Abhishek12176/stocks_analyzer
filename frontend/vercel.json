@@ -1,8 +1,8 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
+  "buildCommand": "npx next build",
   "installCommand": "npm install",
+  "outputDirectory": ".next",
   "regions": ["bom1"],
   "public": false,
   "github": {

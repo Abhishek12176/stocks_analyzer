@@ -30,6 +30,9 @@ out/
 # Backend data (ephemeral runtime data)
 backend/data/
 
+# Node.js lockfile erroneously placed in backend
+backend/package-lock.json
+
 # VS Code
 .vscode/
 
