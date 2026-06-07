@@ -122,7 +122,7 @@ export function RsiChart({ history, loading, height = 180 }: RsiChartProps) {
       window.removeEventListener("resize", handleResize);
       chart.remove();
     };
-  }, [height]);
+  }, [height, rsiData]);
 
   useEffect(() => {
     if (!seriesRef.current || rsiData.length === 0) return;

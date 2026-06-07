@@ -171,7 +171,7 @@ export function CommandPalette() {
               </div>
             ) : query.length > 0 && deduplicated.length === 0 && !loading ? (
               <div className="py-8 text-center text-sm text-neutral-500">
-                No stocks found for "{query}"
+                No stocks found for &ldquo;{query}&rdquo;
               </div>
             ) : null}
           </div>

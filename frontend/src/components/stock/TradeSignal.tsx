@@ -20,7 +20,7 @@ export function TradeSignal({ signal, price, loading }: TradeSignalProps) {
     if (signal.confidence >= 70) return "high";
     if (signal.confidence >= 40) return "medium";
     return "low";
-  }, [signal?.confidence]);
+  }, [signal]);
 
   const confidenceColor = useMemo(() => {
     switch (confidenceLevel) {

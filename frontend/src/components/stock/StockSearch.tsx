@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "@/lib/api";
@@ -24,7 +24,7 @@ export function StockSearch() {
     staleTime: 60_000,
   });
 
-  const results = data?.results ?? [];
+  const results = useMemo(() => data?.results ?? [], [data?.results]);
 
   const handleSelect = useCallback(
     (symbol: StockSymbol) => {
