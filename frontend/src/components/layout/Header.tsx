@@ -115,7 +115,7 @@ export function Header() {
         {/* Profile */}
         <button className="flex items-center gap-2 rounded-xl p-1.5 text-neutral-500 hover:bg-neutral-800/50 transition-colors">
           <div className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-accent-500 to-purple-500 text-xs font-bold text-white">
-            TR
+            AV
           </div>
         </button>
       </div>
