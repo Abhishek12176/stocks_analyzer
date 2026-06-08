@@ -39,31 +39,6 @@ function generateDepthData(currentPrice: number) {
   return { bids, asks };
 }
 
-function generateSignals(data: IntradayPrice[]): { time: string; type: "buy" | "sell" }[] {
-  if (data.length < 10) return [];
-  const signals: { time: string; type: "buy" | "sell" }[] = [];
-  let consecutiveUp = 0;
-  let consecutiveDown = 0;
-  for (let i = 3; i < data.length; i++) {
-    if (data[i].close > data[i].open) {
-      consecutiveUp++;
-      consecutiveDown = 0;
-    } else {
-      consecutiveDown++;
-      consecutiveUp = 0;
-    }
-    if (consecutiveUp >= 3 && data[i].close > data[i - 1].close * 1.005) {
-      signals.push({ time: data[i].time, type: "buy" });
-      consecutiveUp = 0;
-    }
-    if (consecutiveDown >= 3 && data[i].close < data[i - 1].close * 0.995) {
-      signals.push({ time: data[i].time, type: "sell" });
-      consecutiveDown = 0;
-    }
-  }
-  return signals;
-}
-
 export function IntradayChart({
   symbol,
   companyName,
@@ -92,7 +67,6 @@ export function IntradayChart({
   const isPositive = priceChange != null ? priceChange >= 0 : true;
 
   const depthData = useMemo(() => generateDepthData(price), [price]);
-  const signals = useMemo(() => generateSignals(data), [data]);
 
   const totalBidSize = useMemo(() => depthData.bids.reduce((s, d) => s + d.size, 0), [depthData]);
   const totalAskSize = useMemo(() => depthData.asks.reduce((s, d) => s + d.size, 0), [depthData]);
@@ -242,19 +216,8 @@ export function IntradayChart({
     volumeRef.current.setData(volData);
     vwapRef.current.setData(vwapData);
 
-    if (signals.length > 0) {
-      const markers = signals.map((s) => ({
-        time: Math.floor(new Date(s.time).getTime() / 1000) as any,
-        position: s.type === "buy" ? "belowBar" as const : "aboveBar" as const,
-        color: s.type === "buy" ? "#22C55E" : "#EF4444",
-        shape: s.type === "buy" ? "arrowUp" as const : "arrowDown" as const,
-        text: s.type === "buy" ? "BUY" : "SELL",
-      }));
-      candlestickRef.current.setMarkers(markers);
-    }
-
     chartRef.current?.timeScale().fitContent();
-  }, [data, chartReady, signals]);
+  }, [data, chartReady]);
 
   return (
     <div className="relative rounded-xl border border-neutral-800 bg-neutral-900/50 overflow-hidden">
@@ -314,16 +277,7 @@ export function IntradayChart({
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-3 text-xs text-neutral-500">
-          <span className="flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-signal-bullish" />
-            Buy
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-signal-bearish" />
-            Sell
-          </span>
-        </div>
+
       </div>
 
       <div className="flex flex-col lg:flex-row">

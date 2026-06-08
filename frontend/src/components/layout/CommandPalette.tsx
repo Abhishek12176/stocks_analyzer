@@ -76,6 +76,8 @@ export function CommandPalette() {
       setSelectedIndex((i) => Math.max(i - 1, 0));
     } else if (e.key === "Enter" && items[selectedIndex]) {
       navigate(items[selectedIndex].symbol);
+    } else if (e.key === "Escape") {
+      close();
     }
   };
 

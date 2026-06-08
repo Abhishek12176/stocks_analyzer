@@ -58,7 +58,6 @@ export const NAV_SECTIONS = [
   {
     label: "Analysis",
     items: [
-      { label: "Screener", href: "/screener", icon: "Filter" },
       { label: "Compare", href: "/compare", icon: "BarChart3" },
     ],
   },
@@ -80,6 +79,7 @@ export const NAV_SECTIONS = [
     label: "Settings",
     items: [
       { label: "Settings", href: "/settings", icon: "Settings" },
+      { label: "Feedback", href: "/admin/feedback", icon: "MessageSquare" },
     ],
   },
 ] as const;

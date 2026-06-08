@@ -104,17 +104,11 @@ export function Header() {
           </kbd>
         </button>
 
-        {/* Notifications */}
-        <button className="relative rounded-xl p-2 text-neutral-500 hover:bg-neutral-800/50 hover:text-neutral-50 transition-colors">
-          <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 01-3.46 0" />
-          </svg>
-          <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-accent-500" />
-        </button>
-
         {/* Profile */}
         <button className="flex items-center gap-2 rounded-xl p-1.5 text-neutral-500 hover:bg-neutral-800/50 transition-colors">
-          <img src="/logo.png" alt="AVORA" className="size-8 rounded-lg animate-logo-glow" />
+          <span className="flex size-8 items-center justify-center rounded-lg bg-accent-500/10 text-sm font-bold text-accent-500">
+            AV
+          </span>
         </button>
       </div>
     </motion.header>

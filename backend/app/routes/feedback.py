@@ -17,6 +17,17 @@ class FeedbackInput(BaseModel):
     rating: int | None = None
 
 
+@router.get("/feedback")
+async def list_feedback():
+    if not os.path.exists(FEEDBACK_FILE):
+        return []
+    try:
+        with open(FEEDBACK_FILE, "r") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, FileNotFoundError):
+        return []
+
+
 @router.post("/feedback")
 async def submit_feedback(body: FeedbackInput):
     if not body.message.strip():
