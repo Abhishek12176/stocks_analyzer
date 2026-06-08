@@ -34,14 +34,17 @@ def fetch_price_data(symbol: str, period: str = "1y") -> dict:
         data = add_indicators(data)
         latest_indicators = get_latest_indicators(data)
 
-        # Get quote info
-        info = stock.info
+        # Get quote info (handle transient failures gracefully)
+        try:
+            info = stock.info
+            company_name = info.get("longName", info.get("shortName", symbol))
+        except Exception:
+            company_name = symbol
+
         current_price = float(data["Close"].iloc[-1])
         prev_close = float(data["Close"].iloc[-2]) if len(data) > 1 else current_price
         change = current_price - prev_close
         change_percent = (change / prev_close) * 100
-
-        company_name = info.get("longName", info.get("shortName", symbol))
         exchange = "NSE" if ".NS" in ticker else "BSE"
 
         result = {
