@@ -26,16 +26,16 @@ import { useNews } from "@/hooks/useNews";
 import { useShareholding } from "@/hooks/useShareholding";
 import { motion, AnimatePresence } from "framer-motion";
 
-const TAB_IDS = ["technical", "fundamentals", "ownership", "news", "signal", "raw-data"] as const;
+const TAB_IDS = ["technical", "raw-data", "fundamentals", "ownership", "news", "signal"] as const;
 type TabId = (typeof TAB_IDS)[number];
 
 const TABS = [
   { id: "technical", label: "Technical" },
+  { id: "raw-data", label: "Raw Data" },
   { id: "fundamentals", label: "Fundamentals" },
   { id: "ownership", label: "Ownership" },
   { id: "news", label: "News" },
   { id: "signal", label: "Signal" },
-  { id: "raw-data", label: "Raw Data" },
 ];
 
 export default function StockDetailPage() {
