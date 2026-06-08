@@ -194,14 +194,9 @@ export function IntradayChart({
       color: d.close >= d.open ? "rgba(34, 197, 94, 0.4)" : "rgba(239, 68, 68, 0.4)",
     }));
 
-    const vwapValues = data.map((d) => {
-      const typical = (d.high + d.low + d.close) / 3;
-      return typical;
-    });
-
     let cumulativePV = 0;
     let cumulativeV = 0;
-    const vwapData = data.map((d, i) => {
+    const vwapData = data.map((d) => {
       const typical = (d.high + d.low + d.close) / 3;
       cumulativePV += typical * d.volume;
       cumulativeV += d.volume;
@@ -217,6 +212,10 @@ export function IntradayChart({
     vwapRef.current.setData(vwapData);
 
     chartRef.current?.timeScale().fitContent();
+
+    if (containerRef.current) {
+      chartRef.current?.applyOptions({ width: containerRef.current.clientWidth });
+    }
   }, [data, chartReady]);
 
   return (
@@ -369,14 +368,6 @@ export function IntradayChart({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 px-5 py-3 border-t border-neutral-800 bg-neutral-900/80">
-        <button className="flex-1 px-4 py-2 rounded-lg bg-signal-bullish/10 text-signal-bullish text-sm font-semibold hover:bg-signal-bullish/20 transition-colors">
-          Buy
-        </button>
-        <button className="flex-1 px-4 py-2 rounded-lg bg-signal-bearish/10 text-signal-bearish text-sm font-semibold hover:bg-signal-bearish/20 transition-colors">
-          Sell
-        </button>
-      </div>
       <img src="/logo.png" alt="" className="pointer-events-none ml-2 mb-1 size-8 opacity-60" />
     </div>
   );
