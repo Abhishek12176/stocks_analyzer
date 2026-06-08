@@ -1,3 +1,6 @@
+import asyncio
+import logging
+
 from fastapi import APIRouter, Query
 from app.services.yfinance_service import fetch_price_data, fetch_intraday_data, search_symbols
 from app.services.fundamental_service import fundamentals_service
@@ -11,6 +14,9 @@ from app.schemas.fundamentals import FundamentalsResponse
 from app.schemas.signal import SignalResponse
 from app.schemas.news import NewsResponse, NewsArticle
 from app.schemas.shareholding import ShareholdingResponse
+
+logger = logging.getLogger("equitylens.stock")
+_TIMEOUT = 30
 
 router = APIRouter(prefix="/stock", tags=["stock"])
 
@@ -159,13 +165,36 @@ async def get_stock_shareholding(symbol: str):
 
 @router.get("/{symbol}", response_model=dict)
 async def get_full_analysis(symbol: str):
-    """Get a full analysis bundle for a stock."""
+    """Get a full analysis bundle for a stock — fetches price + fundamentals in parallel."""
     clean = clean_symbol(symbol)
     if not validate_symbol(clean):
         raise InvalidSymbolError(symbol)
 
-    price_data = fetch_price_data(clean)
-    f = fundamentals_service.get_fundamentals(clean, "NSE")
+    async def fetch_price():
+        return await asyncio.to_thread(fetch_price_data, clean)
+
+    async def fetch_fundamentals():
+        return await asyncio.to_thread(fundamentals_service.get_fundamentals, clean, "NSE")
+
+    price_data = None
+    fundamentals_raw = None
+
+    try:
+        price_data, fundamentals_raw = await asyncio.wait_for(
+            asyncio.gather(fetch_price(), fetch_fundamentals(), return_exceptions=True),
+            timeout=_TIMEOUT,
+        )
+    except asyncio.TimeoutError:
+        logger.warning("Full analysis timed out for %s", clean)
+
+    if isinstance(price_data, Exception):
+        logger.error("Price fetch failed for %s: %s", clean, price_data)
+        price_data = None
+    if isinstance(fundamentals_raw, Exception):
+        logger.error("Fundamentals fetch failed for %s: %s", clean, fundamentals_raw)
+        fundamentals_raw = None
+
+    f = fundamentals_raw or {}
 
     def pct(val):
         return round(val * 100, 2) if val is not None else None
@@ -218,23 +247,27 @@ async def get_full_analysis(symbol: str):
         "categories": [],
     }
 
+    quote_data = (price_data or {}).get("quote", {})
+    indicators_data = (price_data or {}).get("indicators", {})
+
     signal = generate_trade_signal(
-        price=price_data["quote"]["current_price"],
-        rsi=price_data["indicators"].get("rsi"),
-        macd=price_data["indicators"].get("macd"),
-        signal=price_data["indicators"].get("signal"),
-        sma20=price_data["indicators"].get("sma20"),
-        sma50=price_data["indicators"].get("sma50"),
+        price=quote_data.get("current_price", 0),
+        rsi=indicators_data.get("rsi"),
+        macd=indicators_data.get("macd"),
+        signal=indicators_data.get("signal"),
+        sma20=indicators_data.get("sma20"),
+        sma50=indicators_data.get("sma50"),
     )
-    signal["quote"] = {
-        "price": price_data["quote"]["current_price"],
-        "change": price_data["quote"]["change"],
-        "change_percent": price_data["quote"]["change_percent"],
-    }
+    if quote_data:
+        signal["quote"] = {
+            "price": quote_data.get("current_price", 0),
+            "change": quote_data.get("change", 0),
+            "change_percent": quote_data.get("change_percent", 0),
+        }
 
     return {
-        "quote": price_data["quote"],
-        "indicators": price_data["indicators"],
+        "quote": quote_data,
+        "indicators": indicators_data,
         "fundamentals": fundamentals,
         "score": score,
         "signal": signal["signal"],

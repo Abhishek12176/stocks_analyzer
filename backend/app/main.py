@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.core.middleware import RateLimitMiddleware
-from app.routes import stock, watchlist, compare, market, feedback
+from app.routes import stock, watchlist, compare, market, feedback, health
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -31,6 +31,17 @@ async def lifespan(app: FastAPI):
     logger.info("Debug mode: %s", settings.debug)
     logger.info("CORS origins: %s", settings.cors_origins)
     logger.info("NewsData API key configured: %s", bool(settings.newsdata_api_key))
+
+    from app.services.health_service import health_checker
+    try:
+        results = await health_checker.check_all()
+        for r in results:
+            if r.status == "ok":
+                logger.info("Source healthy: %s (%.1fms)", r.name, r.latency_ms)
+            else:
+                logger.warning("Source unhealthy: %s (%.1fms) %s", r.name, r.latency_ms, r.error or "")
+    except Exception as exc:
+        logger.warning("Startup health check failed: %s", exc)
 
     yield
 
@@ -103,6 +114,7 @@ app.include_router(watchlist.router, prefix="/api/v1")
 app.include_router(compare.router, prefix="/api/v1")
 app.include_router(market.router, prefix="/api/v1")
 app.include_router(feedback.router, prefix="/api/v1")
+app.include_router(health.router, prefix="/api/v1")
 
 
 # ---------------------------------------------------------------------------

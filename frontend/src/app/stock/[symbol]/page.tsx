@@ -20,10 +20,9 @@ import { RawDataTable } from "@/components/stock/RawDataTable";
 import { useWatchlistStore } from "@/store/watchlistStore";
 import { useHistoryStore } from "@/store/historyStore";
 import { useStockPrice } from "@/hooks/useStock";
-import { useFundamentals } from "@/hooks/useFundamentals";
-import { useSignal } from "@/hooks/useSignal";
 import { useNews } from "@/hooks/useNews";
 import { useShareholding } from "@/hooks/useShareholding";
+import { useFullAnalysis } from "@/hooks/useFullAnalysis";
 import { motion, AnimatePresence } from "framer-motion";
 
 const TAB_IDS = ["technical", "raw-data", "fundamentals", "ownership", "news", "signal"] as const;
@@ -54,23 +53,15 @@ export default function StockDetailPage() {
   const isWatched = hydrated && watchlist.has(symbol);
 
   const {
-    data: priceData,
-    isLoading: priceLoading,
-    isError: priceError,
-    refetch: refetchPrice,
+    data: analysisData,
+    isLoading: analysisLoading,
+    isError: analysisError,
+    refetch: refetchAnalysis,
+  } = useFullAnalysis(symbol);
+  const {
+    data: priceHistory,
+    isLoading: historyLoading,
   } = useStockPrice(symbol);
-  const {
-    data: fundamentalsData,
-    isLoading: fundamentalsLoading,
-    isError: fundamentalsError,
-    refetch: refetchFundamentals,
-  } = useFundamentals(symbol);
-  const {
-    data: signalData,
-    isLoading: signalLoading,
-    isError: signalError,
-    refetch: refetchSignal,
-  } = useSignal(symbol);
   const {
     data: newsData,
     isLoading: newsLoading,
@@ -85,11 +76,11 @@ export default function StockDetailPage() {
     addToHistory({
       symbol,
       name: symbol,
-      price: priceData?.quote.currentPrice ?? null,
-      signal: signalData?.signal.action ?? null,
-      score: fundamentalsData?.score.total ?? null,
+      price: analysisData?.quote.currentPrice ?? null,
+      signal: analysisData?.signal.action ?? null,
+      score: analysisData?.score.total ?? null,
     });
-  }, [symbol, priceData, signalData, fundamentalsData, addToHistory]);
+  }, [symbol, analysisData, addToHistory]);
 
   const toggleWatchlist = useCallback(() => {
     if (isWatched) {
@@ -99,8 +90,8 @@ export default function StockDetailPage() {
     }
   }, [symbol, isWatched, watchlist]);
 
-  const isLoading = priceLoading || fundamentalsLoading || signalLoading;
-  const hasError = priceError || fundamentalsError || signalError;
+  const isLoading = analysisLoading || historyLoading;
+  const hasError = analysisError;
 
   if (!symbol) {
     return (
@@ -151,11 +142,7 @@ export default function StockDetailPage() {
             {symbol} data could not be loaded. The stock may be unavailable or the service may be temporarily down.
           </p>
           <button
-            onClick={() => {
-              refetchPrice();
-              refetchSignal();
-              refetchFundamentals();
-            }}
+            onClick={() => refetchAnalysis()}
             className="mt-6 rounded-xl bg-accent-500/10 px-5 py-2.5 text-sm font-medium text-accent-500 border border-accent-500/20 hover:bg-accent-500/20 transition-colors"
           >
             Retry
@@ -204,19 +191,19 @@ export default function StockDetailPage() {
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
         >
           <CompanyHeader
-            quote={priceData?.quote ?? null}
-            loading={priceLoading}
+            quote={analysisData?.quote ?? null}
+            loading={analysisLoading}
           />
 
           <MetricGrid
-            indicators={priceData?.indicators ?? null}
-            loading={priceLoading}
+            indicators={analysisData?.indicators ?? null}
+            loading={analysisLoading}
           />
 
           <TradeSignal
-            signal={signalData?.signal ?? null}
-            price={signalData?.quote ?? null}
-            loading={signalLoading}
+            signal={analysisData?.signal ?? null}
+            price={analysisData?.quote ? { price: analysisData.quote.currentPrice, change: analysisData.quote.change, changePercent: analysisData.quote.changePercent } : null}
+            loading={analysisLoading}
           />
         </motion.div>
       </AnimatePresence>
@@ -237,9 +224,9 @@ export default function StockDetailPage() {
               {activeTab === "technical" && (
                 <TechnicalPanel
                   symbol={symbol}
-                  history={priceData?.history ?? null}
-                  indicators={priceData?.indicators ?? null}
-                  loading={priceLoading}
+                  history={priceHistory?.history ?? null}
+                  indicators={analysisData?.indicators ?? null}
+                  loading={analysisLoading}
                 />
               )}
 
@@ -247,13 +234,13 @@ export default function StockDetailPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
                   <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 backdrop-blur-sm p-5">
                     <FundamentalScoreCard
-                      score={fundamentalsData?.score ?? null}
-                      loading={fundamentalsLoading}
+                      score={analysisData?.score ?? null}
+                      loading={analysisLoading}
                     />
                   </div>
                   <FundamentalPanel
-                    fundamentals={fundamentalsData?.fundamentals ?? null}
-                    loading={fundamentalsLoading}
+                    fundamentals={analysisData?.fundamentals ?? null}
+                    loading={analysisLoading}
                   />
                 </div>
               )}
@@ -291,16 +278,16 @@ export default function StockDetailPage() {
 
               {activeTab === "signal" && (
                 <TradeSignal
-                  signal={signalData?.signal ?? null}
-                  price={signalData?.quote ?? null}
-                  loading={signalLoading}
+                  signal={analysisData?.signal ?? null}
+                  price={analysisData?.quote ? { price: analysisData.quote.currentPrice, change: analysisData.quote.change, changePercent: analysisData.quote.changePercent } : null}
+                  loading={analysisLoading}
                 />
               )}
 
               {activeTab === "raw-data" && (
                 <RawDataTable
-                  history={priceData?.history ?? null}
-                  loading={priceLoading}
+                  history={priceHistory?.history ?? null}
+                  loading={analysisLoading}
                 />
               )}
             </motion.div>
