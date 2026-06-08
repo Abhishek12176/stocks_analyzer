@@ -22,8 +22,6 @@ class FundamentalsService:
             de = info.get('debtToEquity')
             opm = info.get('operatingMargins')
             sector = info.get('sector', 'Unknown')
-            revenue_growth = info.get('revenueGrowth')
-            profit_growth = info.get('earningsGrowth')
 
             # Calculate D/E category + score
             de_data = self._categorize_debt_to_equity(de, sector)
@@ -50,8 +48,6 @@ class FundamentalsService:
                 "de_score": de_data['score'],
                 "operating_margin": opm,
                 "sector": sector,
-                "revenue_growth": revenue_growth,
-                "profit_growth": profit_growth,
                 "fundamental_score": fundamental_score,
                 "rating": rating,
                 "summary": self._generate_summary(fundamental_score, de_data['label'], sector),

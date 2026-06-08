@@ -52,8 +52,8 @@ async def compare_stocks(req: CompareRequest):
                         "roe": f.get("roe"),
                         "de": f.get("debt_to_equity"),
                         "opm": f.get("operating_margin"),
-                        "revenue_growth": round(f.get("revenue_growth") * 100, 2) if f.get("revenue_growth") is not None else None,
-                        "profit_growth": round(f.get("profit_growth") * 100, 2) if f.get("profit_growth") is not None else None,
+                        "revenue_growth": None,
+                        "profit_growth": None,
                         "score": f.get("fundamental_score", 0) or 0,
                     },
                 }
