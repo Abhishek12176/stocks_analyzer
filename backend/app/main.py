@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.core.middleware import RateLimitMiddleware
-from app.routes import stock, watchlist, compare, market
+from app.routes import stock, watchlist, compare, market, feedback
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -102,6 +102,7 @@ app.include_router(stock.router, prefix="/api/v1")
 app.include_router(watchlist.router, prefix="/api/v1")
 app.include_router(compare.router, prefix="/api/v1")
 app.include_router(market.router, prefix="/api/v1")
+app.include_router(feedback.router, prefix="/api/v1")
 
 
 # ---------------------------------------------------------------------------
