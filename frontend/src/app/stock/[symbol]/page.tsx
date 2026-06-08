@@ -95,8 +95,11 @@ export default function StockDetailPage() {
     }
   }, [symbol, isWatched, watchlist]);
 
-  const isLoading = analysisLoading || historyLoading;
+  const isLoading = analysisLoading || historyLoading || signalLoading;
   const hasError = analysisError;
+  const noData = !isLoading && !hasError && (!analysisData || !analysisData.quote);
+  const signalInfo = signalData?.signal ?? analysisData?.signal ?? null;
+  const signalLoadingState = signalLoading || (!signalData && analysisLoading);
 
   if (!symbol) {
     return (
@@ -152,6 +155,46 @@ export default function StockDetailPage() {
           >
             Retry
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (noData) {
+    return (
+      <div className="animate-fade-in">
+        <div className="flex items-center border-b border-neutral-800/60 px-8 py-3.5">
+          <Link
+            href="/"
+            className="text-sm text-neutral-500 hover:text-neutral-300 transition-colors"
+          >
+            <svg className="size-4 inline-block mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            Dashboard
+          </Link>
+          <span className="mx-2 text-neutral-700">/</span>
+          <span className="font-mono text-sm font-bold text-neutral-50">{symbol}</span>
+          <Badge variant="accent" className="ml-2 text-[10px]">NSE</Badge>
+        </div>
+        <div className="flex flex-col items-center justify-center py-32 text-center px-6">
+          <div className="mb-4 size-12 rounded-xl border border-dashed border-neutral-700 flex items-center justify-center text-neutral-600">
+            <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <h3 className="text-base font-semibold text-neutral-300">
+            No data found
+          </h3>
+          <p className="mt-1 text-sm text-neutral-500 max-w-sm">
+            No trading data available for {symbol}. The symbol may be invalid, delisted, or data may not be available from the data provider.
+          </p>
+          <Link
+            href="/"
+            className="mt-6 rounded-xl bg-accent-500/10 px-5 py-2.5 text-sm font-medium text-accent-500 border border-accent-500/20 hover:bg-accent-500/20 transition-colors"
+          >
+            Return to Dashboard
+          </Link>
         </div>
       </div>
     );
@@ -282,11 +325,31 @@ export default function StockDetailPage() {
               )}
 
               {activeTab === "signal" && (
-                <TradeSignal
-                  signal={signalData?.signal ?? analysisData?.signal ?? null}
-                  price={signalData?.quote ? { price: signalData.quote.price, change: signalData.quote.change, changePercent: signalData.quote.changePercent } : analysisData?.quote ? { price: analysisData.quote.currentPrice, change: analysisData.quote.change, changePercent: analysisData.quote.changePercent } : null}
-                  loading={signalLoading || (!signalData && analysisLoading)}
-                />
+                !signalLoadingState && !signalInfo ? (
+                  <div className="flex flex-col items-center justify-center py-20 text-center px-6">
+                    <div className="mb-4 size-12 rounded-xl border border-dashed border-neutral-700 flex items-center justify-center text-neutral-600">
+                      <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-base font-semibold text-neutral-300">No signal data</h3>
+                    <p className="mt-1 text-sm text-neutral-500 max-w-sm">
+                      A trade signal could not be generated for {symbol} due to insufficient data.
+                    </p>
+                    <button
+                      onClick={() => refetchAnalysis()}
+                      className="mt-6 rounded-xl bg-accent-500/10 px-5 py-2.5 text-sm font-medium text-accent-500 border border-accent-500/20 hover:bg-accent-500/20 transition-colors"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                ) : (
+                  <TradeSignal
+                    signal={signalInfo}
+                    price={signalData?.quote ? { price: signalData.quote.price, change: signalData.quote.change, changePercent: signalData.quote.changePercent } : analysisData?.quote ? { price: analysisData.quote.currentPrice, change: analysisData.quote.change, changePercent: analysisData.quote.changePercent } : null}
+                    loading={signalLoadingState}
+                  />
+                )
               )}
 
               {activeTab === "raw-data" && (
