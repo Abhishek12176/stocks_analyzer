@@ -14,6 +14,7 @@ from app.schemas.fundamentals import FundamentalsResponse
 from app.schemas.signal import SignalResponse
 from app.schemas.news import NewsResponse, NewsArticle
 from app.schemas.shareholding import ShareholdingResponse
+from app.schemas.analysis import FullAnalysisResponse
 
 logger = logging.getLogger("equitylens.stock")
 _TIMEOUT = 30
@@ -163,7 +164,7 @@ async def get_stock_shareholding(symbol: str):
     return data
 
 
-@router.get("/{symbol}", response_model=dict)
+@router.get("/{symbol}", response_model=FullAnalysisResponse)
 async def get_full_analysis(symbol: str):
     """Get a full analysis bundle for a stock — fetches price + fundamentals in parallel."""
     clean = clean_symbol(symbol)
