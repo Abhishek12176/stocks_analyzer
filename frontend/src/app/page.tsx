@@ -195,18 +195,7 @@ export default function DashboardPage() {
         <p className="text-neutral-500 text-sm">
           Research, analyze, and track Indian stocks with institutional-grade tools
         </p>
-        <div className="flex items-center justify-center gap-3 pt-2">
-          <button
-            onClick={() => openCommandPalette()}
-            className="flex items-center gap-2 rounded-xl border border-neutral-800 bg-neutral-900/60 backdrop-blur-sm px-4 py-2 text-sm text-neutral-500 hover:text-neutral-50 hover:border-accent-500/30 transition-all"
-          >
-            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
-            </svg>
-            Quick Search
-            <kbd className="ml-1 rounded-md border border-neutral-800 bg-neutral-800/50 px-1.5 py-0.5 text-[11px]">⌘K</kbd>
-          </button>
-        </div>
+
       </motion.div>
 
       {/* Search */}
