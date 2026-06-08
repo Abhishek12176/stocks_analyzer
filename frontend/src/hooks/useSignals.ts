@@ -24,8 +24,7 @@ export function useSignals() {
     queryFn: () =>
       apiGet<SignalsResponse>(`/signals/all`),
     staleTime: 300_000,
-    retry: 2,
-    retryDelay: 1000,
+    retry: false,
   });
 
   const categories = useMemo((): SignalCategory[] => {

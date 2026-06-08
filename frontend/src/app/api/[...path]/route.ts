@@ -4,6 +4,19 @@ import { NextRequest, NextResponse } from "next/server";
 // For local dev, create a .env.local file with BACKEND_URL=http://localhost:8000
 const BACKEND_URL = process.env.BACKEND_URL || "https://stocks-analyzer-9fg7.onrender.com";
 
+const FETCH_TIMEOUT = 30_000;
+
+async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    return response;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
@@ -14,7 +27,7 @@ export async function GET(
   const url = `${BACKEND_URL}/api/${pathname}${searchParams ? `?${searchParams}` : ""}`;
 
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: {
         "Content-Type": "application/json",
         ...(process.env.API_KEY
@@ -53,7 +66,7 @@ export async function POST(
 
   try {
     const body = await request.json();
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -87,7 +100,7 @@ export async function DELETE(
   const url = `${BACKEND_URL}/api/${pathname}`;
 
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

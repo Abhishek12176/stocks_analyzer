@@ -1,4 +1,5 @@
 import logging
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 
@@ -6,7 +7,6 @@ import pandas as pd
 import pandas_ta as ta
 import yfinance as yf
 
-from app.services.yfinance_service import fetch_price_data
 from app.services.signal_service import generate_trade_signal
 from app.services.cache_service import cache_service
 from app.utils.validators import add_exchange_suffix
@@ -53,7 +53,7 @@ def _fetch_one(symbol: str) -> dict | None:
     try:
         ticker = add_exchange_suffix(symbol)
         stock = yf.Ticker(ticker)
-        hist = stock.history(period="1mo")
+        hist = stock.history(period="3mo")
 
         if hist.empty:
             return None
@@ -67,46 +67,22 @@ def _fetch_one(symbol: str) -> dict | None:
         if hist.empty:
             return None
 
-        # Add indicators (handle short history gracefully)
-        try:
-            hist["RSI"] = ta.rsi(hist["Close"], length=14)
-        except Exception:
-            hist["RSI"] = float("nan")
-        try:
-            macd_df = ta.macd(hist["Close"], fast=12, slow=26, signal=9)
-            if macd_df is not None:
-                hist["MACD"] = macd_df["MACD_12_26_9"]
-                hist["Signal"] = macd_df["MACDs_12_26_9"]
-            else:
-                hist["MACD"] = float("nan")
-                hist["Signal"] = float("nan")
-        except Exception:
-            hist["MACD"] = float("nan")
-            hist["Signal"] = float("nan")
-        try:
-            hist["SMA20"] = ta.sma(hist["Close"], length=20)
-        except Exception:
-            hist["SMA20"] = float("nan")
-        try:
-            hist["SMA50"] = ta.sma(hist["Close"], length=50)
-        except Exception:
-            hist["SMA50"] = float("nan")
-
         latest = hist.iloc[-1]
         current_price = float(latest["Close"])
         prev_close = float(hist.iloc[-2]["Close"]) if len(hist) > 1 else current_price
         change = current_price - prev_close
         change_percent = (change / prev_close) * 100
 
-        rsi = float(latest["RSI"]) if pd.notna(latest["RSI"]) else None
-        macd_val = float(latest["MACD"]) if pd.notna(latest["MACD"]) else None
-        sig_val = float(latest["Signal"]) if pd.notna(latest["Signal"]) else None
-        sma20 = float(latest["SMA20"]) if pd.notna(latest["SMA20"]) else None
-        sma50 = float(latest["SMA50"]) if pd.notna(latest["SMA50"]) else None
+        rsi_val = float(ta.rsi(hist["Close"], length=14).iloc[-1]) if len(hist) >= 15 else None
+        macd_df = ta.macd(hist["Close"], fast=12, slow=26, signal=9) if len(hist) >= 35 else None
+        macd_val = float(macd_df["MACD_12_26_9"].iloc[-1]) if macd_df is not None else None
+        sig_val = float(macd_df["MACDs_12_26_9"].iloc[-1]) if macd_df is not None else None
+        sma20 = float(ta.sma(hist["Close"], length=20).iloc[-1]) if len(hist) >= 20 else None
+        sma50 = float(ta.sma(hist["Close"], length=50).iloc[-1]) if len(hist) >= 50 else None
 
         sig = generate_trade_signal(
             price=current_price,
-            rsi=rsi,
+            rsi=rsi_val,
             macd=macd_val,
             signal=sig_val,
             sma20=sma20,
@@ -125,7 +101,7 @@ def _fetch_one(symbol: str) -> dict | None:
             "changePercent": round(change_percent, 2),
             "signal": sig_obj["action"],
             "confidence": sig_obj["confidence"],
-            "rsi": rsi,
+            "rsi": rsi_val,
             "macd": macd_val,
             "macdSignal": sig_val,
             "sma20": sma20,
@@ -169,19 +145,26 @@ def _categorize(stock: dict) -> list[str]:
     return cats
 
 
+SIGNALS_CACHE_TTL = 600  # 10 minutes — expensive to regenerate
+
+
 def get_all_signals() -> dict:
     cache_key = "signals_all"
     cached = cache_service.get(cache_service.price_cache, cache_key)
     if cached:
         return cached
 
+    t0 = time.time()
     results: list[dict] = []
-    with ThreadPoolExecutor(max_workers=3) as executor:
+    with ThreadPoolExecutor(max_workers=15) as executor:
         futures = {executor.submit(_fetch_one, sym): sym for sym in ALL_SYMBOLS}
         for future in as_completed(futures):
-            result = future.result()
-            if result:
-                results.append(result)
+            try:
+                result = future.result(timeout=20)
+                if result:
+                    results.append(result)
+            except Exception as exc:
+                logger.debug("Signal scan timeout: %s", exc)
 
     categories = []
     for cat_id in CATEGORY_ORDER:
@@ -200,6 +183,9 @@ def get_all_signals() -> dict:
         "generatedAt": datetime.now(timezone.utc).isoformat(),
     }
 
-    cache_service.set(cache_service.price_cache, cache_key, response)
-    logger.info("Signals scan complete: %d stocks processed", len(results))
+    try:
+        cache_service.set(cache_service.price_cache, cache_key, response)
+    except Exception:
+        pass
+    logger.info("Signals scan complete: %d stocks processed in %.1fs", len(results), time.time() - t0)
     return response
