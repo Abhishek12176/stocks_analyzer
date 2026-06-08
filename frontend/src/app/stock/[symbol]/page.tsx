@@ -20,6 +20,7 @@ import { RawDataTable } from "@/components/stock/RawDataTable";
 import { useWatchlistStore } from "@/store/watchlistStore";
 import { useHistoryStore } from "@/store/historyStore";
 import { useStockPrice } from "@/hooks/useStock";
+import { useSignal } from "@/hooks/useSignal";
 import { useNews } from "@/hooks/useNews";
 import { useShareholding } from "@/hooks/useShareholding";
 import { useFullAnalysis } from "@/hooks/useFullAnalysis";
@@ -62,6 +63,10 @@ export default function StockDetailPage() {
     data: priceHistory,
     isLoading: historyLoading,
   } = useStockPrice(symbol);
+  const {
+    data: signalData,
+    isLoading: signalLoading,
+  } = useSignal(symbol);
   const {
     data: newsData,
     isLoading: newsLoading,
@@ -278,9 +283,9 @@ export default function StockDetailPage() {
 
               {activeTab === "signal" && (
                 <TradeSignal
-                  signal={analysisData?.signal ?? null}
-                  price={analysisData?.quote ? { price: analysisData.quote.currentPrice, change: analysisData.quote.change, changePercent: analysisData.quote.changePercent } : null}
-                  loading={analysisLoading}
+                  signal={signalData?.signal ?? analysisData?.signal ?? null}
+                  price={signalData?.quote ? { price: signalData.quote.price, change: signalData.quote.change, changePercent: signalData.quote.changePercent } : analysisData?.quote ? { price: analysisData.quote.currentPrice, change: analysisData.quote.change, changePercent: analysisData.quote.changePercent } : null}
+                  loading={signalLoading || (!signalData && analysisLoading)}
                 />
               )}
 

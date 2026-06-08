@@ -10,7 +10,6 @@ export function useIntradayStock(symbol: string, interval: string = "5m") {
         interval,
       }),
     enabled: !!symbol,
-    staleTime: 30_000,
-    refetchInterval: 30_000,
+    staleTime: 120_000,
   });
 }

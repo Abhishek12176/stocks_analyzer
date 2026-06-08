@@ -8,7 +8,6 @@ export function useSignal(symbol: string) {
     queryFn: () =>
       apiGet<SignalResponse>(`/stock/${encodeURIComponent(symbol)}/signal`),
     enabled: !!symbol,
-    staleTime: 60_000,
-    refetchInterval: 60_000,
+    staleTime: 120_000,
   });
 }

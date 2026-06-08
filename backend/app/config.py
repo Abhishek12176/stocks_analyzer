@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     rate_limit_per_minute: int = 60
 
     # Cache TTLs (seconds)
-    cache_ttl_price: int = 60
+    cache_ttl_price: int = 180
     cache_ttl_fundamentals: int = 3600
     cache_ttl_shareholding: int = 86400
     cache_ttl_news: int = 900

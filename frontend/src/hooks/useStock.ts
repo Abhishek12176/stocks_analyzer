@@ -10,7 +10,6 @@ export function useStockPrice(symbol: string, period: string = "1y") {
         period,
       }),
     enabled: !!symbol,
-    staleTime: 60_000,
-    refetchInterval: 60_000,
+    staleTime: 180_000,
   });
 }

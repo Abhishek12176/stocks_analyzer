@@ -10,8 +10,8 @@ export function useFullAnalysis(symbol: string) {
         `/stock/${encodeURIComponent(symbol)}`
       ),
     enabled: !!symbol,
-    staleTime: 60_000,
-    retry: 3,
+    staleTime: 180_000,
+    retry: 1,
     retryDelay: 1000,
   });
 }

@@ -17,7 +17,7 @@ from app.schemas.shareholding import ShareholdingResponse
 from app.schemas.analysis import FullAnalysisResponse
 
 logger = logging.getLogger("equitylens.stock")
-_TIMEOUT = 30
+_TIMEOUT = 15
 
 router = APIRouter(prefix="/stock", tags=["stock"])
 
@@ -117,7 +117,7 @@ async def get_stock_signal(symbol: str):
     clean = clean_symbol(symbol)
     if not validate_symbol(clean):
         raise InvalidSymbolError(symbol)
-    price_data = fetch_price_data(clean)
+    price_data = fetch_price_data(clean, "6mo")
     indicators = price_data["indicators"]
     signal = generate_trade_signal(
         price=price_data["quote"]["current_price"],
@@ -172,7 +172,7 @@ async def get_full_analysis(symbol: str):
         raise InvalidSymbolError(symbol)
 
     async def fetch_price():
-        return await asyncio.to_thread(fetch_price_data, clean)
+        return await asyncio.to_thread(fetch_price_data, clean, "6mo")
 
     async def fetch_fundamentals():
         return await asyncio.to_thread(fundamentals_service.get_fundamentals, clean, "NSE")
@@ -180,13 +180,23 @@ async def get_full_analysis(symbol: str):
     price_data = None
     fundamentals_raw = None
 
-    try:
-        price_data, fundamentals_raw = await asyncio.wait_for(
-            asyncio.gather(fetch_price(), fetch_fundamentals(), return_exceptions=True),
-            timeout=_TIMEOUT,
-        )
-    except asyncio.TimeoutError:
-        logger.warning("Full analysis timed out for %s", clean)
+    async def fetch_price_with_timeout():
+        try:
+            return await asyncio.wait_for(fetch_price(), timeout=_TIMEOUT)
+        except asyncio.TimeoutError:
+            logger.warning("Price fetch timed out for %s", clean)
+            return None
+
+    async def fetch_fundamentals_with_timeout():
+        try:
+            return await asyncio.wait_for(fetch_fundamentals(), timeout=_TIMEOUT)
+        except asyncio.TimeoutError:
+            logger.warning("Fundamentals fetch timed out for %s", clean)
+            return None
+
+    price_data, fundamentals_raw = await asyncio.gather(
+        fetch_price_with_timeout(), fetch_fundamentals_with_timeout(), return_exceptions=True
+    )
 
     if isinstance(price_data, Exception):
         logger.error("Price fetch failed for %s: %s", clean, price_data)
