@@ -4,11 +4,11 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 
 import pandas as pd
-import pandas_ta as ta
 import yfinance as yf
 
 from app.services.signal_service import generate_trade_signal
 from app.services.cache_service import cache_service
+from app.services.indicator_service import rsi, macd, sma
 from app.utils.validators import add_exchange_suffix
 
 logger = logging.getLogger("equitylens.signals")
@@ -73,12 +73,12 @@ def _fetch_one(symbol: str) -> dict | None:
         change = current_price - prev_close
         change_percent = (change / prev_close) * 100
 
-        rsi_val = float(ta.rsi(hist["Close"], length=14).iloc[-1]) if len(hist) >= 15 else None
-        macd_df = ta.macd(hist["Close"], fast=12, slow=26, signal=9) if len(hist) >= 35 else None
-        macd_val = float(macd_df["MACD_12_26_9"].iloc[-1]) if macd_df is not None else None
-        sig_val = float(macd_df["MACDs_12_26_9"].iloc[-1]) if macd_df is not None else None
-        sma20 = float(ta.sma(hist["Close"], length=20).iloc[-1]) if len(hist) >= 20 else None
-        sma50 = float(ta.sma(hist["Close"], length=50).iloc[-1]) if len(hist) >= 50 else None
+        rsi_val = float(rsi(hist["Close"], length=14).iloc[-1]) if len(hist) >= 15 else None
+        macd_df = macd(hist["Close"], fast=12, slow=26, signal=9) if len(hist) >= 35 else None
+        macd_val = float(macd_df["MACD"].iloc[-1]) if macd_df is not None else None
+        sig_val = float(macd_df["Signal"].iloc[-1]) if macd_df is not None else None
+        sma20 = float(sma(hist["Close"], length=20).iloc[-1]) if len(hist) >= 20 else None
+        sma50 = float(sma(hist["Close"], length=50).iloc[-1]) if len(hist) >= 50 else None
 
         sig = generate_trade_signal(
             price=current_price,

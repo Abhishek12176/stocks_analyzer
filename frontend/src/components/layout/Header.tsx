@@ -100,16 +100,10 @@ export function Header() {
           </svg>
           <span className="hidden sm:inline">Search stocks...</span>
           <kbd className="ml-1 rounded-md border border-neutral-800 bg-neutral-800/50 px-1.5 py-0.5 text-[11px] text-neutral-500">
-            ⌘K
+            Ctrl+K
           </kbd>
         </button>
 
-        {/* Profile */}
-        <button className="flex items-center gap-2 rounded-xl p-1.5 text-neutral-500 hover:bg-neutral-800/50 transition-colors">
-          <span className="flex size-8 items-center justify-center rounded-lg bg-accent-500/10 text-sm font-bold text-accent-500">
-            AV
-          </span>
-        </button>
       </div>
     </motion.header>
   );

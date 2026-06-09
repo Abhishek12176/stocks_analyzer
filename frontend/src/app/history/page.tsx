@@ -66,7 +66,7 @@ export default function HistoryPage() {
             title="No analysis history"
             description="Stocks you analyze will appear here for quick access."
             action={
-              <Link href="/stock/RELIANCE">
+              <Link href="/">
                 <Button variant="primary">Analyze a stock</Button>
               </Link>
             }

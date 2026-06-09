@@ -21,14 +21,4 @@ export const compareSchema = z.object({
     .max(5, "Maximum 5 stocks"),
 });
 
-export const screenerSchema = z.object({
-  minROE: z.number().min(0).max(100).optional(),
-  maxDE: z.number().min(0).max(10).optional(),
-  minRevenueGrowth: z.number().min(-100).max(1000).optional(),
-  minProfitGrowth: z.number().min(-100).max(1000).optional(),
-  minOPM: z.number().min(0).max(100).optional(),
-  maxPE: z.number().min(0).max(200).optional(),
-  sector: z.string().optional(),
-});
 
-export type ScreenerFormData = z.infer<typeof screenerSchema>;

@@ -65,7 +65,7 @@ export default function WatchlistPage() {
             title="Your watchlist is empty"
             description="Start tracking stocks by adding them from the stock detail page."
             action={
-              <Link href="/stock/RELIANCE">
+              <Link href="/">
                 <Button variant="primary">Browse stocks</Button>
               </Link>
             }
