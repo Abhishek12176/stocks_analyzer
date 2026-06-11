@@ -54,10 +54,10 @@ export function FundamentalPanel({ fundamentals, loading }: FundamentalPanelProp
     );
   }
 
-  const fmtMarketCap = (v: number | null) => v != null ? formatIndianNumber(v) : "₹0 Cr";
-  const fmtPercent = (v: number | null) => v != null ? formatPercent(v) : "0.00%";
-  const fmtRatio = (v: number | null) => v != null ? formatRatio(v) : "0.00";
-  const fmtPrice = (v: number | null) => v != null ? formatPrice(v) : "₹0.00";
+  const fmtMarketCap = (v: number | null) => formatIndianNumber(v);
+  const fmtPercent = (v: number | null) => formatPercent(v);
+  const fmtRatio = (v: number | null) => formatRatio(v);
+  const fmtPrice = (v: number | null) => formatPrice(v);
 
   return (
     <div className="space-y-4">
