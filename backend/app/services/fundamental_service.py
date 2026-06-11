@@ -14,8 +14,8 @@ class FundamentalsService:
             'returnOnCapitalEmployed': lambda: info.get('returnOnCapitalEmployed'),
             'debtToEquity': lambda: info.get('debtToEquity', 0),
             'operatingMargins': lambda: info.get('operatingMargins', 0),
-            'revenueGrowth': lambda: info.get('revenueGrowth', 0),
-            'earningsGrowth': lambda: info.get('earningsGrowth', 0),
+            'revenueGrowth': lambda: info.get('revenueGrowth'),
+            'earningsGrowth': lambda: info.get('earningsGrowth'),
         }
         fallback = fallback_map.get(field)
         if fallback:
@@ -50,8 +50,8 @@ class FundamentalsService:
             roe = self._get_fallback(roe, 'returnOnEquity', info) or 0
             de = self._get_fallback(de, 'debtToEquity', info) or 0
             opm = self._get_fallback(opm, 'operatingMargins', info) or 0
-            revenue_growth = self._get_fallback(revenue_growth, 'revenueGrowth', info) or 0
-            profit_growth = self._get_fallback(profit_growth, 'earningsGrowth', info) or 0
+            revenue_growth = self._get_fallback(revenue_growth, 'revenueGrowth', info)
+            profit_growth = self._get_fallback(profit_growth, 'earningsGrowth', info)
 
             # Calculate D/E category + score
             de_data = self._categorize_debt_to_equity(de, sector)
