@@ -3,6 +3,25 @@ from typing import Dict, Any, Optional
 
 class FundamentalsService:
 
+    def _get_fallback(self, value, field: str, info: dict):
+        if value is not None:
+            return value
+        fallback_map = {
+            'marketCap': lambda: info.get('marketCap', 0),
+            'trailingPE': lambda: info.get('trailingPE', 0),
+            'trailingEps': lambda: info.get('trailingEps', 0),
+            'returnOnEquity': lambda: info.get('returnOnEquity', 0),
+            'returnOnCapitalEmployed': lambda: info.get('returnOnCapitalEmployed'),
+            'debtToEquity': lambda: info.get('debtToEquity', 0),
+            'operatingMargins': lambda: info.get('operatingMargins', 0),
+            'revenueGrowth': lambda: info.get('revenueGrowth', 0),
+            'earningsGrowth': lambda: info.get('earningsGrowth', 0),
+        }
+        fallback = fallback_map.get(field)
+        if fallback:
+            return fallback()
+        return value
+
     def get_fundamentals(self, symbol: str, exchange: str, bse_code: Optional[str] = None) -> Dict[str, Any]:
         """
         Fetch fundamentals from yfinance and calculate scores
@@ -13,7 +32,7 @@ class FundamentalsService:
             ticker = yf.Ticker(yahoo_symbol)
             info = ticker.info
 
-            # Extract raw data
+            # Extract raw data with fallbacks
             market_cap = info.get('marketCap')
             pe = info.get('trailingPE')
             eps = info.get('trailingEps')
@@ -21,7 +40,18 @@ class FundamentalsService:
             roce = info.get('returnOnCapitalEmployed') # May be null
             de = info.get('debtToEquity')
             opm = info.get('operatingMargins')
+            revenue_growth = info.get('revenueGrowth')
+            profit_growth = info.get('earningsGrowth')
             sector = info.get('sector', 'Unknown')
+
+            market_cap = self._get_fallback(market_cap, 'marketCap', info) or 0
+            pe = self._get_fallback(pe, 'trailingPE', info) or 0
+            eps = self._get_fallback(eps, 'trailingEps', info) or 0
+            roe = self._get_fallback(roe, 'returnOnEquity', info) or 0
+            de = self._get_fallback(de, 'debtToEquity', info) or 0
+            opm = self._get_fallback(opm, 'operatingMargins', info) or 0
+            revenue_growth = self._get_fallback(revenue_growth, 'revenueGrowth', info) or 0
+            profit_growth = self._get_fallback(profit_growth, 'earningsGrowth', info) or 0
 
             # Calculate D/E category + score
             de_data = self._categorize_debt_to_equity(de, sector)
@@ -42,11 +72,13 @@ class FundamentalsService:
                 "pe_ratio": pe,
                 "eps": eps,
                 "roe": roe,
-                "roce": roce,
+                "roce": roce if roce is not None else 0,
                 "debt_to_equity": de,
                 "de_category": de_data['label'],
                 "de_score": de_data['score'],
                 "operating_margin": opm,
+                "revenue_growth": revenue_growth,
+                "profit_growth": profit_growth,
                 "sector": sector,
                 "fundamental_score": fundamental_score,
                 "rating": rating,
@@ -107,17 +139,17 @@ class FundamentalsService:
             scores.append(metrics['de_score'] * 0.25)
 
         # ROE Score - 25 weight, >20% = 100
-        if metrics['roe']:
+        if metrics.get('roe') is not None:
             roe_score = min(100, (metrics['roe'] * 100) * 5) # 20% ROE = 100
             scores.append(roe_score * 0.25)
 
         # PE Score - 25 weight, lower is better, 15 = 100
-        if metrics['pe']:
+        if metrics.get('pe') is not None:
             pe_score = max(0, 100 - (metrics['pe'] - 15) * 2)
             scores.append(pe_score * 0.25)
 
         # OPM Score - 25 weight, >20% = 100
-        if metrics['opm']:
+        if metrics.get('opm') is not None:
             opm_score = min(100, metrics['opm'] * 100 * 5)
             scores.append(opm_score * 0.25)
 

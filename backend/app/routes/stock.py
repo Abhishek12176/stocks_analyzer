@@ -18,7 +18,7 @@ from app.schemas.shareholding import ShareholdingResponse
 from app.schemas.analysis import FullAnalysisResponse
 
 logger = logging.getLogger("equitylens.stock")
-_TIMEOUT = 15
+_TIMEOUT = 30
 
 router = APIRouter(prefix="/stock", tags=["stock"])
 
@@ -77,8 +77,8 @@ async def get_stock_fundamentals(symbol: str):
         "current_ratio": None,
         "interest_coverage": None,
         "altman_z_score": None,
-        "revenue_growth": None,
-        "profit_growth": None,
+        "revenue_growth": pct(f.get("revenue_growth")),
+        "profit_growth": pct(f.get("profit_growth")),
         "eps_growth": None,
         "fcf_growth": None,
         "asset_turnover": None,
@@ -232,8 +232,8 @@ async def get_full_analysis(symbol: str):
         "current_ratio": None,
         "interest_coverage": None,
         "altman_z_score": None,
-        "revenue_growth": None,
-        "profit_growth": None,
+        "revenue_growth": pct(f.get("revenue_growth")),
+        "profit_growth": pct(f.get("profit_growth")),
         "eps_growth": None,
         "fcf_growth": None,
         "asset_turnover": None,
