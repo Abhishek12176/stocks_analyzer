@@ -1,3 +1,8 @@
+export interface SentimentScore {
+  label: "positive" | "negative" | "neutral";
+  score: number;
+}
+
 export interface NewsArticle {
   title: string;
   summary: string;
@@ -5,6 +10,7 @@ export interface NewsArticle {
   source: string;
   published: string;
   publishedDt: string | null;
+  sentiment?: SentimentScore | null;
 }
 
 export interface NewsResponse {

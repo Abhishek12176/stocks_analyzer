@@ -15,3 +15,7 @@ cachetools==6.2.4
 httpx==0.28.1
 aiohttp==3.11.16
 python-dotenv==1.2.2
+vaderSentiment==3.3.2
+# Optional: uncomment for higher-accuracy FinBERT sentiment
+# transformers>=4.30.0
+# torch>=2.0.0

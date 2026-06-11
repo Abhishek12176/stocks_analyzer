@@ -85,6 +85,21 @@ export function NewsFeed({ articles, loading }: NewsFeedProps) {
               </svg>
             </div>
             <div className="flex items-center gap-3 mt-3.5 text-xs text-neutral-600">
+              {article.sentiment && (
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide",
+                    article.sentiment.label === "positive" && "bg-signal-bullish/10 text-signal-bullish border border-signal-bullish/20",
+                    article.sentiment.label === "negative" && "bg-signal-bearish/10 text-signal-bearish border border-signal-bearish/20",
+                    article.sentiment.label === "neutral" && "bg-neutral-800/50 text-neutral-400 border border-neutral-700/30",
+                  )}
+                >
+                  {article.sentiment.label === "positive" && "▲"}
+                  {article.sentiment.label === "negative" && "▼"}
+                  {article.sentiment.label === "neutral" && "◆"}
+                  {article.sentiment.label}
+                </span>
+              )}
               <span className="font-medium">{article.source}</span>
               <span className="text-neutral-700">·</span>
               <span>{formatDate(article.published || article.publishedDt)}</span>

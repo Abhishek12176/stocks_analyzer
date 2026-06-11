@@ -6,6 +6,7 @@ from app.services.yfinance_service import fetch_price_data, fetch_intraday_data,
 from app.services.fundamental_service import fundamentals_service
 from app.services.signal_service import generate_trade_signal
 from app.services.news_service import fetch_stock_news
+from app.services.sentiment_service import average_sentiment_score
 from app.services.shareholding_service import fetch_shareholding_data
 from app.utils.validators import clean_symbol, validate_symbol
 from app.utils.exceptions import InvalidSymbolError
@@ -113,12 +114,16 @@ async def get_stock_fundamentals(symbol: str):
 
 @router.get("/{symbol}/signal", response_model=SignalResponse)
 async def get_stock_signal(symbol: str):
-    """Get trade signal based on technical indicators."""
+    """Get trade signal based on technical indicators + news sentiment."""
     clean = clean_symbol(symbol)
     if not validate_symbol(clean):
         raise InvalidSymbolError(symbol)
     price_data = fetch_price_data(clean, "6mo")
     indicators = price_data["indicators"]
+
+    news_articles = fetch_stock_news(clean, limit=10)
+    sentiment = average_sentiment_score(news_articles)
+
     signal = generate_trade_signal(
         price=price_data["quote"]["current_price"],
         rsi=indicators.get("rsi"),
@@ -126,6 +131,7 @@ async def get_stock_signal(symbol: str):
         signal=indicators.get("signal"),
         sma20=indicators.get("sma20"),
         sma50=indicators.get("sma50"),
+        sentiment_score=sentiment,
     )
     signal["quote"] = {
         "price": price_data["quote"]["current_price"],
@@ -261,6 +267,9 @@ async def get_full_analysis(symbol: str):
     quote_data = (price_data or {}).get("quote", {})
     indicators_data = (price_data or {}).get("indicators", {})
 
+    news_articles = fetch_stock_news(clean, limit=10)
+    sentiment = average_sentiment_score(news_articles)
+
     signal = generate_trade_signal(
         price=quote_data.get("current_price", 0),
         rsi=indicators_data.get("rsi"),
@@ -268,6 +277,7 @@ async def get_full_analysis(symbol: str):
         signal=indicators_data.get("signal"),
         sma20=indicators_data.get("sma20"),
         sma50=indicators_data.get("sma50"),
+        sentiment_score=sentiment,
     )
     if quote_data:
         signal["quote"] = {

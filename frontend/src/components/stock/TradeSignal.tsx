@@ -173,7 +173,7 @@ export function TradeSignal({ signal, price, loading }: TradeSignalProps) {
 
           <div>
             <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-[0.8px] mb-2.5 block">
-              Technical Analysis
+              Signal Analysis
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {signal.reasons.map((reason, i) => (

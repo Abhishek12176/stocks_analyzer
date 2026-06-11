@@ -2,6 +2,7 @@ import requests
 from datetime import datetime, timezone
 from app.config import settings
 from app.services.cache_service import cache_service
+from app.services.sentiment_service import analyze_articles
 
 
 def clean_symbol(symbol: str) -> str:
@@ -107,5 +108,7 @@ def fetch_stock_news(symbol: str, limit: int = 30) -> list[dict]:
         key=lambda a: a["published_dt"] or datetime.min.replace(tzinfo=timezone.utc).isoformat(),
         reverse=True,
     )
+
+    all_news = analyze_articles(all_news)
 
     return all_news[:limit]

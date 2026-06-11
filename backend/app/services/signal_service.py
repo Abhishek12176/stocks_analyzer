@@ -9,8 +9,9 @@ def generate_trade_signal(
     sma20: float | None,
     sma50: float | None,
     prediction: str = "",
+    sentiment_score: float | None = None,
 ) -> dict:
-    """Generate a multi-factor trade signal based on technical indicators."""
+    """Generate a multi-factor trade signal based on technical indicators + news sentiment."""
     reasons = []
     bull_count = 0
     bear_count = 0
@@ -129,6 +130,35 @@ def generate_trade_signal(
                 "detail": prediction,
             }
         )
+
+    # Sentiment
+    if sentiment_score is not None:
+        if sentiment_score > 0.3:
+            bull_count += 1
+            reasons.append(
+                {
+                    "factor": "Sentiment",
+                    "impact": "bullish",
+                    "detail": f"News sentiment positive ({sentiment_score:+.2f}) — favorable coverage",
+                }
+            )
+        elif sentiment_score < -0.3:
+            bear_count += 1
+            reasons.append(
+                {
+                    "factor": "Sentiment",
+                    "impact": "bearish",
+                    "detail": f"News sentiment negative ({sentiment_score:.2f}) — unfavorable coverage",
+                }
+            )
+        else:
+            reasons.append(
+                {
+                    "factor": "Sentiment",
+                    "impact": "neutral",
+                    "detail": f"News sentiment neutral ({sentiment_score:+.2f})",
+                }
+            )
 
     # Determine action
     total_factors = bull_count + bear_count
