@@ -4,7 +4,6 @@
   "installCommand": "npm install",
   "outputDirectory": ".next",
   "regions": ["bom1"],
-  "public": false,
   "github": {
     "silent": true
   }
