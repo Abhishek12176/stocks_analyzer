@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
-import { NAV_SECTIONS, type NavItem } from "@/lib/constants";
+import { NAV_SECTIONS } from "@/lib/constants";
 import { useUiStore } from "@/store/uiStore";
 import { motion } from "framer-motion";
 
@@ -154,16 +154,7 @@ export function Sidebar() {
                     <span className={cn("relative z-10", active && "text-accent-500")}>
                       {iconMap[item.icon]}
                     </span>
-                    {!collapsed && (
-                      <span className="relative z-10 flex items-center gap-2">
-                        {item.label}
-                        {(item as NavItem).badge && (
-                          <span className="rounded-md bg-accent-500/15 px-1.5 py-[2px] text-[10px] font-semibold uppercase tracking-wider text-accent-400">
-                            {(item as NavItem).badge}
-                          </span>
-                        )}
-                      </span>
-                    )}
+                    {!collapsed && <span className="relative z-10">{item.label}</span>}
                     {active && !collapsed && (
                       <motion.div
                         layoutId="sidebar-dot"
