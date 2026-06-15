@@ -102,7 +102,7 @@ export function NewsFeed({ articles, loading }: NewsFeedProps) {
               )}
               <span className="font-medium">{article.source}</span>
               <span className="text-neutral-700">·</span>
-              <span>{formatDate(article.published || article.publishedDt)}</span>
+              <span>{formatDate(article.publishedDt || article.published)}</span>
               {article.link && (
                 <>
                   <span className="text-neutral-700">·</span>

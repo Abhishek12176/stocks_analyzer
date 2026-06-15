@@ -1,8 +1,12 @@
+import logging
+
 import requests
 from datetime import datetime, timezone
 from app.config import settings
 from app.services.cache_service import cache_service
 from app.services.sentiment_service import analyze_articles
+
+logger = logging.getLogger(__name__)
 
 
 def clean_symbol(symbol: str) -> str:
@@ -72,13 +76,14 @@ def fetch_stock_news(symbol: str, limit: int = 30) -> list[dict]:
 
         try:
             response = requests.get(
-                "https://newsdata.io/api/1/market",
+                "https://newsdata.io/api/1/news",
                 params=params,
                 timeout=20,
             )
             response.raise_for_status()
             data = response.json()
-        except Exception:
+        except Exception as exc:
+            logger.warning("NewsData.io API error for %s: %s", symbol, exc)
             break
 
         if data.get("status") != "success":
