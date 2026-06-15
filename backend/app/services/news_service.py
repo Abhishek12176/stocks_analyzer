@@ -1,5 +1,6 @@
 import logging
 
+import yfinance as yf
 import requests
 from datetime import datetime, timezone
 from app.config import settings
@@ -46,16 +47,8 @@ def normalize_article(item: dict) -> dict:
     }
 
 
-def fetch_stock_news(symbol: str, limit: int = 30) -> list[dict]:
-    """Fetch news articles for a stock symbol from NewsData.io."""
-    cache_key = f"news_{symbol}_{limit}"
-    cached = cache_service.get(cache_service.news_cache, cache_key)
-    if cached:
-        return cached
-
-    if not settings.newsdata_api_key:
-        return []
-
+def fetch_newsdata_news(symbol: str, limit: int) -> list[dict]:
+    """Fetch news from NewsData.io API."""
     clean_name = clean_symbol(symbol)
     search_query = f"{clean_name} stock"
 
@@ -109,6 +102,69 @@ def fetch_stock_news(symbol: str, limit: int = 30) -> list[dict]:
         if not next_page:
             break
 
+    return all_news
+
+
+def fetch_yfinance_news(symbol: str, limit: int) -> list[dict]:
+    """Fetch news from Yahoo Finance as fallback."""
+    try:
+        ticker = yf.Ticker(symbol if symbol.endswith(".NS") else f"{symbol}.NS")
+        news_items = ticker.news or []
+    except Exception as exc:
+        logger.warning("yfinance news fallback failed for %s: %s", symbol, exc)
+        return []
+
+    all_news = []
+    for item in news_items[:limit]:
+        content = item.get("content", item)
+        title = content.get("title", "")
+        link = content.get("canonicalUrl", {}).get("url", "") or content.get("link", "")
+        summary = content.get("summary", "")
+        pub_time = content.get("pubDate", 0) or content.get("providerPublishTime", 0)
+        source = content.get("publisher", "") or content.get("provider", {}).get("displayName", "Yahoo Finance")
+
+        if isinstance(pub_time, (int, float)):
+            published_dt = datetime.fromtimestamp(pub_time, tz=timezone.utc)
+        else:
+            published_dt = parse_date(pub_time)
+
+        all_news.append({
+            "title": title or "No title",
+            "summary": summary or "",
+            "link": link or "",
+            "source": source or "Yahoo Finance",
+            "published_dt": published_dt.isoformat() if published_dt else None,
+            "published": (
+                published_dt.strftime("%d %b %Y, %I:%M %p") if published_dt else "Latest"
+            ),
+        })
+
+    return all_news
+
+
+def fetch_stock_news(symbol: str, limit: int = 30) -> list[dict]:
+    """Fetch news articles for a stock symbol.
+    
+    Priority:
+    1. NewsData.io (if API key configured)
+    2. Yahoo Finance (fallback, no API key needed)
+    """
+    cache_key = f"news_{symbol}_{limit}"
+    cached = cache_service.get(cache_service.news_cache, cache_key)
+    if cached:
+        return cached
+
+    all_news = []
+    if settings.newsdata_api_key:
+        logger.info("Fetching news from NewsData.io for %s", symbol)
+        all_news = fetch_newsdata_news(symbol, limit)
+    else:
+        logger.info("No NewsData API key, using yfinance news fallback for %s", symbol)
+
+    if not all_news:
+        logger.info("Falling back to yfinance news for %s", symbol)
+        all_news = fetch_yfinance_news(symbol, limit)
+
     all_news.sort(
         key=lambda a: a["published_dt"] or datetime.min.replace(tzinfo=timezone.utc).isoformat(),
         reverse=True,
@@ -116,4 +172,5 @@ def fetch_stock_news(symbol: str, limit: int = 30) -> list[dict]:
 
     all_news = analyze_articles(all_news)
 
+    cache_service.set(cache_service.news_cache, cache_key, all_news[:limit])
     return all_news[:limit]
