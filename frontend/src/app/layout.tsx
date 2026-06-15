@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "@/styles/globals.css";
 import { Providers } from "./providers";
+import PromoOverlay from "@/components/layout/PromoOverlay";
 
 export const metadata: Metadata = {
   title: "AVORA — Stock Analysis Platform",
@@ -33,7 +34,10 @@ export default function RootLayout({
             `,
           }}
         />
-        <Providers>{children}</Providers>
+        <Providers>
+          <PromoOverlay />
+          {children}
+        </Providers>
       </body>
     </html>
   );
