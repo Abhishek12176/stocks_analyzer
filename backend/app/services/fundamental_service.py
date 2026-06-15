@@ -7,13 +7,13 @@ class FundamentalsService:
         if value is not None:
             return value
         fallback_map = {
-            'marketCap': lambda: info.get('marketCap', 0),
-            'trailingPE': lambda: info.get('trailingPE', 0),
-            'trailingEps': lambda: info.get('trailingEps', 0),
-            'returnOnEquity': lambda: info.get('returnOnEquity', 0),
+            'marketCap': lambda: info.get('marketCap'),
+            'trailingPE': lambda: info.get('trailingPE'),
+            'trailingEps': lambda: info.get('trailingEps'),
+            'returnOnEquity': lambda: info.get('returnOnEquity'),
             'returnOnCapitalEmployed': lambda: info.get('returnOnCapitalEmployed'),
-            'debtToEquity': lambda: info.get('debtToEquity', 0),
-            'operatingMargins': lambda: info.get('operatingMargins', 0),
+            'debtToEquity': lambda: info.get('debtToEquity'),
+            'operatingMargins': lambda: info.get('operatingMargins'),
             'revenueGrowth': lambda: info.get('revenueGrowth'),
             'earningsGrowth': lambda: info.get('earningsGrowth'),
         }
@@ -44,12 +44,12 @@ class FundamentalsService:
             profit_growth = info.get('earningsGrowth')
             sector = info.get('sector', 'Unknown')
 
-            market_cap = self._get_fallback(market_cap, 'marketCap', info) or 0
-            pe = self._get_fallback(pe, 'trailingPE', info) or 0
-            eps = self._get_fallback(eps, 'trailingEps', info) or 0
-            roe = self._get_fallback(roe, 'returnOnEquity', info) or 0
-            de = self._get_fallback(de, 'debtToEquity', info) or 0
-            opm = self._get_fallback(opm, 'operatingMargins', info) or 0
+            market_cap = self._get_fallback(market_cap, 'marketCap', info)
+            pe = self._get_fallback(pe, 'trailingPE', info)
+            eps = self._get_fallback(eps, 'trailingEps', info)
+            roe = self._get_fallback(roe, 'returnOnEquity', info)
+            de = self._get_fallback(de, 'debtToEquity', info)
+            opm = self._get_fallback(opm, 'operatingMargins', info)
             revenue_growth = self._get_fallback(revenue_growth, 'revenueGrowth', info)
             profit_growth = self._get_fallback(profit_growth, 'earningsGrowth', info)
 
@@ -72,7 +72,7 @@ class FundamentalsService:
                 "pe_ratio": pe,
                 "eps": eps,
                 "roe": roe,
-                "roce": roce if roce is not None else 0,
+                "roce": roce,
                 "debt_to_equity": de,
                 "de_category": de_data['label'],
                 "de_score": de_data['score'],
