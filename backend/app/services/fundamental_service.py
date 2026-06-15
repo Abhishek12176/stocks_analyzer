@@ -22,6 +22,47 @@ class FundamentalsService:
             return fallback()
         return value
 
+    def _calc_roce(self, ticker) -> Optional[float]:
+        try:
+            bs = ticker.balance_sheet
+            inc = ticker.financials
+            if bs is None or inc is None or bs.empty or inc.empty:
+                return None
+
+            bs_col = bs.iloc[:, 0]
+            inc_col = inc.iloc[:, 0]
+
+            total_assets = bs_col.get("Total Assets")
+            current_liabilities = bs_col.get("Current Liabilities")
+            total_equity = bs_col.get("Total Equity Gross Minority Interest")
+            total_debt = bs_col.get("Total Debt")
+
+            # Try EBIT first, fallback to Operating Income, then Net Income
+            ebit = inc_col.get("EBIT") or inc_col.get("Operating Income")
+            net_income = inc_col.get("Net Income")
+
+            # Formula 1: EBIT / (Total Assets - Current Liabilities)
+            if ebit is not None and total_assets is not None and current_liabilities is not None:
+                capital_employed = total_assets - current_liabilities
+                if capital_employed > 0:
+                    return ebit / capital_employed
+
+            # Formula 2: EBIT / (Total Equity + Total Debt) — works for financial companies
+            if ebit is not None and total_equity is not None and total_debt is not None:
+                capital_employed = total_equity + total_debt
+                if capital_employed > 0:
+                    return ebit / capital_employed
+
+            # Formula 3: Net Income / (Total Equity + Total Debt) — for banks
+            if net_income is not None and total_equity is not None and total_debt is not None:
+                capital_employed = total_equity + total_debt
+                if capital_employed > 0:
+                    return net_income / capital_employed
+
+            return None
+        except Exception:
+            return None
+
     def get_fundamentals(self, symbol: str, exchange: str, bse_code: Optional[str] = None) -> Dict[str, Any]:
         """
         Fetch fundamentals from yfinance and calculate scores
@@ -37,7 +78,7 @@ class FundamentalsService:
             pe = info.get('trailingPE')
             eps = info.get('trailingEps')
             roe = info.get('returnOnEquity')
-            roce = info.get('returnOnCapitalEmployed') # May be null
+            roce = info.get('returnOnCapitalEmployed')
             de = info.get('debtToEquity')
             opm = info.get('operatingMargins')
             revenue_growth = info.get('revenueGrowth')
@@ -52,6 +93,10 @@ class FundamentalsService:
             opm = self._get_fallback(opm, 'operatingMargins', info)
             revenue_growth = self._get_fallback(revenue_growth, 'revenueGrowth', info)
             profit_growth = self._get_fallback(profit_growth, 'earningsGrowth', info)
+
+            # ROCE: try direct field first, then calculate from financial statements
+            if roce is None:
+                roce = self._calc_roce(ticker)
 
             # Calculate D/E category + score
             de_data = self._categorize_debt_to_equity(de, sector)
