@@ -47,14 +47,14 @@ async def compare_stocks(req: CompareRequest):
                     "symbol": clean,
                     "name": price_data["quote"]["company_name"],
                     "metrics": {
-                        "peRatio": f.get("pe_ratio"),
+                        "price": price_data["quote"]["current_price"],
+                        "pe": f.get("pe_ratio"),
                         "roe": f.get("roe"),
-                        "debtEquity": f.get("debt_to_equity"),
+                        "de": f.get("debt_to_equity"),
                         "opm": f.get("operating_margin"),
-                        "npm": f.get("net_profit_margin"),
-                        "revenueGrowth": f.get("revenue_growth"),
-                        "profitGrowth": f.get("profit_growth"),
-                        "currentRatio": f.get("current_ratio"),
+                        "revenue_growth": None,
+                        "profit_growth": None,
+                        "score": f.get("fundamental_score", 0) or 0,
                     },
                 }
             )
