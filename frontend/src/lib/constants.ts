@@ -58,7 +58,7 @@ export const NAV_SECTIONS = [
   {
     label: "Analysis",
     items: [
-      { label: "Compare", href: "/compare", icon: "BarChart3" },
+      { label: "Compare", href: "/compare", icon: "BarChart3", badge: "Soon" },
     ],
   },
   {
@@ -84,5 +84,5 @@ export const NAV_SECTIONS = [
   },
 ] as const;
 
-type NavItem = { label: string; href: string; icon: string };
+export type NavItem = { label: string; href: string; icon: string; badge?: string };
 export const NAV_ITEMS: NavItem[] = ([] as NavItem[]).concat(...NAV_SECTIONS.map((s) => [...s.items] as NavItem[]));
