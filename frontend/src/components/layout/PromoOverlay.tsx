@@ -48,7 +48,7 @@ export default function PromoOverlay() {
             autoPlay
             muted
             playsInline
-            className="h-full w-full object-cover"
+            className="h-full w-full object-contain"
             onEnded={dismiss}
           >
             <source src="/promo.mp4" type="video/mp4" />
