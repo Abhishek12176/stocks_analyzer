@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
+venv/
+.venv/
+env/
+
+# Environment Variables
+.env
+backend/.env
+frontend/.env
+frontend/.env.local
+
+# Node Modules
+node_modules/
+
+# Next.js Build
+.next/
+out/
+
+# TypeScript
+*.tsbuildinfo
+
+# Backend data (ephemeral runtime data)
+backend/data/
+
+# Node.js lockfile erroneously placed in backend
+backend/package-lock.json
+
+# VS Code
+.vscode/
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# OS Files
+Thumbs.db
+.DS_Store
+
+# Logs
+*.log
+logs/

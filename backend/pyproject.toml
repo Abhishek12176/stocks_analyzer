@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "equitylens-api"
+version = "0.1.0"
+description = "EquityLens Stock Analysis Platform — Backend API"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi==0.136.3",
+    "uvicorn[standard]==0.48.0",
+    "pydantic==2.13.1",
+    "pydantic-settings==2.14.1",
+    "yfinance==1.3.0",
+    "pandas==2.3.3",
+    "numpy==2.2.6",
+    "pandas-ta==0.4.71b0",
+    "beautifulsoup4==4.14.3",
+    "lxml==6.1.1",
+    "requests==2.32.5",
+    "playwright==1.60.0",
+    "cachetools==6.2.4",
+    "httpx==0.28.1",
+    "python-dotenv==1.2.2",
+]
