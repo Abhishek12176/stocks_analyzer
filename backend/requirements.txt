@@ -18,5 +18,6 @@ aiohttp==3.11.16
 python-dotenv==1.2.2
 vaderSentiment==3.3.2
 # FinBERT sentiment (higher accuracy) — needs torch (~2GB). Optional: code falls back to VADER if not installed.
-transformers>=4.30.0
-torch>=2.0.0
+# NOTE: keep commented for Render free-tier — torch/transformers cause the build to timeout/fail.
+# transformers>=4.30.0
+# torch>=2.0.0

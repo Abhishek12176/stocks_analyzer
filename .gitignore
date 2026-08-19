@@ -30,6 +30,9 @@ out/
 # Backend data (ephemeral runtime data)
 backend/data/
 
+# Nested duplicate copy of the project
+/stocks_analyzer-main/
+
 # Node.js lockfile erroneously placed in backend
 backend/package-lock.json
 
