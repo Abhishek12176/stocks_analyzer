@@ -7,6 +7,23 @@
 
 ## [DONE]
 
+> **Forecast latency/cache fix (21-Sep-2026) — production, no feature/model change:**
+> - `routes/forecast.py` `_TIMEOUT` 240 → 600s. A cold 10y forecast = 10y network pull +
+>   walk-forward ensemble training; measured 75.1s compute on a 2476-row frame (fast=True)
+>   plus ~60-150s fetch. The old 4-min cap silently returned `is_available:false`
+>   ("forecast computation timed out") on first-ever runs — the "no output, bhut slow" report.
+> - `chat_service._maybe_forecast` now bounded by `asyncio.wait_for(..., 600)` (previously
+>   awaited `to_thread` forever → chat could hang indefinitely).
+> - Root cause of "cache never hits" clarified: the per-day forecast cache is keyed by
+>   `as_of` + upstream `data_fingerprint`. Intraday the live bar changes → fingerprint
+>   changes → full recompute per request; after NSE close the fingerprint is stable
+>   (verified stable back-to-back, as_of 2026-09-21), so same-day repeat requests are
+>   instant. New trading day = exactly one cold run per symbol, then cached.
+> - Pre-warmed cache (after market close, settled data) for SBIN / ICICIBANK / ITC:
+>   cold ~65-85s each, re-run verified cache HIT ~1.4-1.6s. Forecasts:
+>   SBIN BUY P(up)=0.785, ICICIBANK BUY P(up)=0.6298, ITC HOLD P(up)=0.3518.
+> - Tests: `test_forecast.py` + `test_chat_service.py` EXIT=0.
+
 > **FINAL VERDICT — PRODUCTION LOCKED (12-Sep-2026, as_of 09-09, refreshed 09-11)**
 >
 > Locked architecture: **ensemble = logistic + rf** (XGBoost dropped);

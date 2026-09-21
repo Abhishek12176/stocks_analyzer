@@ -11,7 +11,10 @@ from app.utils.validators import clean_symbol, validate_symbol
 from app.utils.exceptions import InvalidSymbolError
 
 logger = logging.getLogger("equitylens.forecast")
-_TIMEOUT = 240
+# A cold 10y forecast = 10y network pull + walk-forward ensemble training.
+# Measured: 75s compute on a 2476-row frame (fast=True) plus ~60-150s of data
+# fetch, so a 4-minute cap silently killed most first-ever runs ("timed out").
+_TIMEOUT = 600
 
 router = APIRouter(prefix="/stock", tags=["forecast"])
 

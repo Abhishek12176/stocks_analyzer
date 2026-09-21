@@ -691,9 +691,13 @@ async def _maybe_forecast(symbol: str) -> dict | None:
     """Best-effort structured forecast for one symbol (never fabricates)."""
     try:
         from app.ml.pipeline import forecast_symbol
-        result = await asyncio.to_thread(
-            forecast_symbol, symbol, period="10y", fast=True
+        result = await asyncio.wait_for(
+            asyncio.to_thread(forecast_symbol, symbol, period="10y", fast=True),
+            timeout=600,
         )
+    except asyncio.TimeoutError:
+        logger.warning("chat forecast timed out for %s", symbol)
+        return None
     except Exception as exc:  # noqa: BLE001
         logger.warning("chat forecast failed for %s: %s", symbol, exc)
         return None
