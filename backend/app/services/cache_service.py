@@ -16,6 +16,9 @@ class CacheService:
         self.news_cache = TTLCache(
             maxsize=100, ttl=settings.cache_ttl_news
         )
+        self.market_cache = TTLCache(
+            maxsize=60, ttl=settings.cache_ttl_market
+        )
 
     def get(self, cache: TTLCache, key: str):
         return cache.get(key)
@@ -28,6 +31,7 @@ class CacheService:
         self.fundamentals_cache.clear()
         self.shareholding_cache.clear()
         self.news_cache.clear()
+        self.market_cache.clear()
 
 
 cache_service = CacheService()

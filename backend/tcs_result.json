@@ -1,0 +1,941 @@
+{
+  "symbol": "TCS",
+  "is_available": true,
+  "error": null,
+  "horizon": 20,
+  "generated_at": "2026-09-06T20:05:00.720227+00:00",
+  "versions": {
+    "feature": "v1",
+    "model": "baseline-v1",
+    "ensemble": "ensemble-v1",
+    "calibration": "isotonic"
+  },
+  "latest": {
+    "as_of": "2026-09-04T00:00:00",
+    "close": 2304.0,
+    "raw_probability": 0.4268,
+    "probability": 0.4,
+    "signal": "SELL",
+    "direction": 0,
+    "confidence": 0.2,
+    "reason": "P(up)=0.400 <= SELL threshold 0.400",
+    "threshold_buy": 0.6,
+    "threshold_sell": 0.4
+  },
+  "validation": {
+    "target_formula": "target_ret_20d = Close[T+20]/Close[T] - 1",
+    "entry_convention": "entry at Close[T] for every signal row T",
+    "exit_convention": "exit at Close[T+horizon] (matches the target window)",
+    "position_sizing": "1000000.0 / 20 per position (max gross exposure = 1.0x capital)",
+    "max_concurrent_positions": "<= 20 by construction (no hidden leverage)",
+    "oof_rows": 440,
+    "calibration_fit_rows": 352,
+    "holdout_rows": 88,
+    "final_holdout_never_used_for_fitting": true,
+    "final_holdout_used_for": "backtest metrics, baselines, shuffled-control, calibrated Brier/ECE — evaluation ONLY; never for model fitting, feature selection, scaler fitting, threshold tuning or calibration fit",
+    "isotonic_calibration_fit_window": "older (chronologically first) 80% of OOF rows"
+  },
+  "calibration": {
+    "method": "isotonic",
+    "n": 352,
+    "n_holdout": 88,
+    "brier": 0.3635,
+    "brier_calibrated": 0.2726,
+    "ece": 0.3791,
+    "ece_calibrated": 0.2438,
+    "brier_fit": 0.2586,
+    "brier_calibrated_fit": 0.2691,
+    "ece_fit": 0.1609,
+    "ece_calibrated_fit": 0.1297
+  },
+  "backtest": [
+    {
+      "cum_return": -0.276,
+      "max_dd": -0.4334,
+      "sharpe": -1.3007,
+      "sortino": -1.31,
+      "calmar": -0.6953,
+      "annualized_return": -0.3013,
+      "annualized_volatility": 0.2512,
+      "avg_daily_return": -0.0013,
+      "n_days": 228.0,
+      "max_concurrent": 20.0,
+      "no_leverage_ok": "yes",
+      "trade_accuracy": 0.2955,
+      "n_trades": 88.0,
+      "win_rate": 0.25,
+      "avg_return": -3143.0514,
+      "profit_factor": 0.2591,
+      "accuracy": 0.2955,
+      "precision": 0.2955,
+      "recall": 1.0,
+      "f1": 0.4561,
+      "false_buy_pct": 0.7045,
+      "false_sell_pct": null,
+      "roc_auc": 0.447,
+      "calibration_brier": 0.2726,
+      "confusion": {
+        "tn": 0.0,
+        "fp": 62.0,
+        "fn": 0.0,
+        "tp": 26.0,
+        "n": 88.0
+      },
+      "metric_groups": {
+        "per_bet": {
+          "metrics": [
+            "n_trades",
+            "win_rate",
+            "avg_return",
+            "profit_factor"
+          ],
+          "meaning": "per completed horizon-day bet (one settled position; entry Close[T], exit Close[T+horizon])"
+        },
+        "daily_equity_curve": {
+          "metrics": [
+            "cum_return",
+            "max_dd",
+            "sharpe",
+            "sortino",
+            "calmar",
+            "annualized_return",
+            "annualized_volatility",
+            "avg_daily_return",
+            "n_days",
+            "max_concurrent",
+            "no_leverage_ok"
+          ],
+          "meaning": "daily marked-to-market portfolio/equity curve over the tested window"
+        },
+        "classification": {
+          "metrics": [
+            "accuracy",
+            "precision",
+            "recall",
+            "f1",
+            "confusion",
+            "false_buy_pct",
+            "false_sell_pct",
+            "roc_auc",
+            "calibration_brier",
+            "trade_accuracy"
+          ],
+          "meaning": "P(up)>=0.5 decision vs actual direction on the tested rows"
+        }
+      },
+      "model": "ensemble",
+      "calibrated": "isotonic"
+    },
+    {
+      "cum_return": -0.1212,
+      "max_dd": -0.198,
+      "sharpe": -1.1433,
+      "sortino": -0.9332,
+      "calmar": -0.6746,
+      "annualized_return": -0.1336,
+      "annualized_volatility": 0.1191,
+      "avg_daily_return": -0.0005,
+      "n_days": 228.0,
+      "max_concurrent": 17.0,
+      "no_leverage_ok": "yes",
+      "trade_accuracy": 0.3478,
+      "n_trades": 46.0,
+      "win_rate": 0.3043,
+      "avg_return": -2648.6248,
+      "profit_factor": 0.3205,
+      "accuracy": 0.5455,
+      "precision": 0.3478,
+      "recall": 0.6154,
+      "f1": 0.4444,
+      "false_buy_pct": 0.6522,
+      "false_sell_pct": 0.2381,
+      "roc_auc": 0.5658,
+      "calibration_brier": 0.2298,
+      "confusion": {
+        "tn": 32.0,
+        "fp": 30.0,
+        "fn": 10.0,
+        "tp": 16.0,
+        "n": 88.0
+      },
+      "metric_groups": {
+        "per_bet": {
+          "metrics": [
+            "n_trades",
+            "win_rate",
+            "avg_return",
+            "profit_factor"
+          ],
+          "meaning": "per completed horizon-day bet (one settled position; entry Close[T], exit Close[T+horizon])"
+        },
+        "daily_equity_curve": {
+          "metrics": [
+            "cum_return",
+            "max_dd",
+            "sharpe",
+            "sortino",
+            "calmar",
+            "annualized_return",
+            "annualized_volatility",
+            "avg_daily_return",
+            "n_days",
+            "max_concurrent",
+            "no_leverage_ok"
+          ],
+          "meaning": "daily marked-to-market portfolio/equity curve over the tested window"
+        },
+        "classification": {
+          "metrics": [
+            "accuracy",
+            "precision",
+            "recall",
+            "f1",
+            "confusion",
+            "false_buy_pct",
+            "false_sell_pct",
+            "roc_auc",
+            "calibration_brier",
+            "trade_accuracy"
+          ],
+          "meaning": "P(up)>=0.5 decision vs actual direction on the tested rows"
+        }
+      },
+      "model": "voting",
+      "calibrated": "raw"
+    },
+    {
+      "cum_return": -0.276,
+      "max_dd": -0.4334,
+      "sharpe": -1.3007,
+      "sortino": -1.31,
+      "calmar": -0.6953,
+      "annualized_return": -0.3013,
+      "annualized_volatility": 0.2512,
+      "avg_daily_return": -0.0013,
+      "n_days": 228.0,
+      "max_concurrent": 20.0,
+      "no_leverage_ok": "yes",
+      "trade_accuracy": 0.2955,
+      "n_trades": 88.0,
+      "win_rate": 0.25,
+      "avg_return": -3143.0514,
+      "profit_factor": 0.2591,
+      "accuracy": 0.2955,
+      "precision": 0.2955,
+      "recall": 1.0,
+      "f1": 0.4561,
+      "false_buy_pct": 0.7045,
+      "false_sell_pct": null,
+      "roc_auc": 0.7432,
+      "calibration_brier": 0.494,
+      "confusion": {
+        "tn": 0.0,
+        "fp": 62.0,
+        "fn": 0.0,
+        "tp": 26.0,
+        "n": 88.0
+      },
+      "metric_groups": {
+        "per_bet": {
+          "metrics": [
+            "n_trades",
+            "win_rate",
+            "avg_return",
+            "profit_factor"
+          ],
+          "meaning": "per completed horizon-day bet (one settled position; entry Close[T], exit Close[T+horizon])"
+        },
+        "daily_equity_curve": {
+          "metrics": [
+            "cum_return",
+            "max_dd",
+            "sharpe",
+            "sortino",
+            "calmar",
+            "annualized_return",
+            "annualized_volatility",
+            "avg_daily_return",
+            "n_days",
+            "max_concurrent",
+            "no_leverage_ok"
+          ],
+          "meaning": "daily marked-to-market portfolio/equity curve over the tested window"
+        },
+        "classification": {
+          "metrics": [
+            "accuracy",
+            "precision",
+            "recall",
+            "f1",
+            "confusion",
+            "false_buy_pct",
+            "false_sell_pct",
+            "roc_auc",
+            "calibration_brier",
+            "trade_accuracy"
+          ],
+          "meaning": "P(up)>=0.5 decision vs actual direction on the tested rows"
+        }
+      },
+      "model": "logistic",
+      "calibrated": "raw"
+    },
+    {
+      "cum_return": -0.2492,
+      "max_dd": -0.4068,
+      "sharpe": -1.2328,
+      "sortino": -1.2765,
+      "calmar": -0.6699,
+      "annualized_return": -0.2725,
+      "annualized_volatility": 0.2354,
+      "avg_daily_return": -0.0012,
+      "n_days": 228.0,
+      "max_concurrent": 20.0,
+      "no_leverage_ok": "yes",
+      "trade_accuracy": 0.3059,
+      "n_trades": 85.0,
+      "win_rate": 0.2588,
+      "avg_return": -2938.5729,
+      "profit_factor": 0.2791,
+      "accuracy": 0.3295,
+      "precision": 0.3059,
+      "recall": 1.0,
+      "f1": 0.4685,
+      "false_buy_pct": 0.6941,
+      "false_sell_pct": 0.0,
+      "roc_auc": 0.456,
+      "calibration_brier": 0.3822,
+      "confusion": {
+        "tn": 3.0,
+        "fp": 59.0,
+        "fn": 0.0,
+        "tp": 26.0,
+        "n": 88.0
+      },
+      "metric_groups": {
+        "per_bet": {
+          "metrics": [
+            "n_trades",
+            "win_rate",
+            "avg_return",
+            "profit_factor"
+          ],
+          "meaning": "per completed horizon-day bet (one settled position; entry Close[T], exit Close[T+horizon])"
+        },
+        "daily_equity_curve": {
+          "metrics": [
+            "cum_return",
+            "max_dd",
+            "sharpe",
+            "sortino",
+            "calmar",
+            "annualized_return",
+            "annualized_volatility",
+            "avg_daily_return",
+            "n_days",
+            "max_concurrent",
+            "no_leverage_ok"
+          ],
+          "meaning": "daily marked-to-market portfolio/equity curve over the tested window"
+        },
+        "classification": {
+          "metrics": [
+            "accuracy",
+            "precision",
+            "recall",
+            "f1",
+            "confusion",
+            "false_buy_pct",
+            "false_sell_pct",
+            "roc_auc",
+            "calibration_brier",
+            "trade_accuracy"
+          ],
+          "meaning": "P(up)>=0.5 decision vs actual direction on the tested rows"
+        }
+      },
+      "model": "rf",
+      "calibrated": "raw"
+    },
+    {
+      "cum_return": -0.2107,
+      "max_dd": -0.3117,
+      "sharpe": -1.5066,
+      "sortino": -1.4279,
+      "calmar": -0.7412,
+      "annualized_return": -0.231,
+      "annualized_volatility": 0.1651,
+      "avg_daily_return": -0.001,
+      "n_days": 228.0,
+      "max_concurrent": 19.0,
+      "no_leverage_ok": "yes",
+      "trade_accuracy": 0.303,
+      "n_trades": 66.0,
+      "win_rate": 0.2576,
+      "avg_return": -3192.838,
+      "profit_factor": 0.2877,
+      "accuracy": 0.4091,
+      "precision": 0.303,
+      "recall": 0.7692,
+      "f1": 0.4348,
+      "false_buy_pct": 0.697,
+      "false_sell_pct": 0.2727,
+      "roc_auc": 0.3505,
+      "calibration_brier": 0.4722,
+      "confusion": {
+        "tn": 16.0,
+        "fp": 46.0,
+        "fn": 6.0,
+        "tp": 20.0,
+        "n": 88.0
+      },
+      "metric_groups": {
+        "per_bet": {
+          "metrics": [
+            "n_trades",
+            "win_rate",
+            "avg_return",
+            "profit_factor"
+          ],
+          "meaning": "per completed horizon-day bet (one settled position; entry Close[T], exit Close[T+horizon])"
+        },
+        "daily_equity_curve": {
+          "metrics": [
+            "cum_return",
+            "max_dd",
+            "sharpe",
+            "sortino",
+            "calmar",
+            "annualized_return",
+            "annualized_volatility",
+            "avg_daily_return",
+            "n_days",
+            "max_concurrent",
+            "no_leverage_ok"
+          ],
+          "meaning": "daily marked-to-market portfolio/equity curve over the tested window"
+        },
+        "classification": {
+          "metrics": [
+            "accuracy",
+            "precision",
+            "recall",
+            "f1",
+            "confusion",
+            "false_buy_pct",
+            "false_sell_pct",
+            "roc_auc",
+            "calibration_brier",
+            "trade_accuracy"
+          ],
+          "meaning": "P(up)>=0.5 decision vs actual direction on the tested rows"
+        }
+      },
+      "model": "xgboost",
+      "calibrated": "raw"
+    },
+    {
+      "cum_return": -0.276,
+      "max_dd": -0.4334,
+      "sharpe": -1.3007,
+      "sortino": -1.31,
+      "calmar": -0.6953,
+      "annualized_return": -0.3013,
+      "annualized_volatility": 0.2512,
+      "avg_daily_return": -0.0013,
+      "n_days": 228.0,
+      "max_concurrent": 20.0,
+      "no_leverage_ok": "yes",
+      "trade_accuracy": 0.2955,
+      "n_trades": 88.0,
+      "win_rate": 0.25,
+      "avg_return": -3143.0514,
+      "profit_factor": 0.2591,
+      "accuracy": 0.2955,
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "false_buy_pct": null,
+      "false_sell_pct": null,
+      "roc_auc": null,
+      "calibration_brier": null,
+      "confusion": null,
+      "metric_groups": {
+        "per_bet": {
+          "metrics": [
+            "n_trades",
+            "win_rate",
+            "avg_return",
+            "profit_factor"
+          ],
+          "meaning": "per completed horizon-day bet (one settled position; entry Close[T], exit Close[T+horizon])"
+        },
+        "daily_equity_curve": {
+          "metrics": [
+            "cum_return",
+            "max_dd",
+            "sharpe",
+            "sortino",
+            "calmar",
+            "annualized_return",
+            "annualized_volatility",
+            "avg_daily_return",
+            "n_days",
+            "max_concurrent",
+            "no_leverage_ok"
+          ],
+          "meaning": "daily marked-to-market portfolio/equity curve over the tested window"
+        },
+        "classification": {
+          "metrics": [
+            "accuracy",
+            "precision",
+            "recall",
+            "f1",
+            "confusion",
+            "false_buy_pct",
+            "false_sell_pct",
+            "roc_auc",
+            "calibration_brier",
+            "trade_accuracy"
+          ],
+          "meaning": "P(up)>=0.5 decision vs actual direction on the tested rows"
+        }
+      },
+      "model": "always_up",
+      "calibrated": "n/a"
+    },
+    {
+      "cum_return": 0.1202,
+      "max_dd": -0.1335,
+      "sharpe": 0.8491,
+      "sortino": 1.0957,
+      "calmar": 1.0058,
+      "annualized_return": 0.1343,
+      "annualized_volatility": 0.1641,
+      "avg_daily_return": 0.0006,
+      "n_days": 228.0,
+      "max_concurrent": 20.0,
+      "no_leverage_ok": "yes",
+      "trade_accuracy": 0.7045,
+      "n_trades": 88.0,
+      "win_rate": 0.6705,
+      "avg_return": 1356.1683,
+      "profit_factor": 1.8157,
+      "accuracy": 0.7045,
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "false_buy_pct": null,
+      "false_sell_pct": null,
+      "roc_auc": null,
+      "calibration_brier": null,
+      "confusion": null,
+      "metric_groups": {
+        "per_bet": {
+          "metrics": [
+            "n_trades",
+            "win_rate",
+            "avg_return",
+            "profit_factor"
+          ],
+          "meaning": "per completed horizon-day bet (one settled position; entry Close[T], exit Close[T+horizon])"
+        },
+        "daily_equity_curve": {
+          "metrics": [
+            "cum_return",
+            "max_dd",
+            "sharpe",
+            "sortino",
+            "calmar",
+            "annualized_return",
+            "annualized_volatility",
+            "avg_daily_return",
+            "n_days",
+            "max_concurrent",
+            "no_leverage_ok"
+          ],
+          "meaning": "daily marked-to-market portfolio/equity curve over the tested window"
+        },
+        "classification": {
+          "metrics": [
+            "accuracy",
+            "precision",
+            "recall",
+            "f1",
+            "confusion",
+            "false_buy_pct",
+            "false_sell_pct",
+            "roc_auc",
+            "calibration_brier",
+            "trade_accuracy"
+          ],
+          "meaning": "P(up)>=0.5 decision vs actual direction on the tested rows"
+        }
+      },
+      "model": "always_down",
+      "calibrated": "n/a"
+    },
+    {
+      "cum_return": -0.2779,
+      "max_dd": -0.429,
+      "sharpe": -1.3504,
+      "sortino": -1.3461,
+      "calmar": -0.707,
+      "annualized_return": -0.3033,
+      "annualized_volatility": 0.2451,
+      "avg_daily_return": -0.0013,
+      "n_days": 228.0,
+      "max_concurrent": 20.0,
+      "no_leverage_ok": "yes",
+      "trade_accuracy": 0.2874,
+      "n_trades": 87.0,
+      "win_rate": 0.2414,
+      "avg_return": -3200.4132,
+      "profit_factor": 0.2541,
+      "accuracy": 0.2874,
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "false_buy_pct": null,
+      "false_sell_pct": null,
+      "roc_auc": null,
+      "calibration_brier": null,
+      "confusion": null,
+      "metric_groups": {
+        "per_bet": {
+          "metrics": [
+            "n_trades",
+            "win_rate",
+            "avg_return",
+            "profit_factor"
+          ],
+          "meaning": "per completed horizon-day bet (one settled position; entry Close[T], exit Close[T+horizon])"
+        },
+        "daily_equity_curve": {
+          "metrics": [
+            "cum_return",
+            "max_dd",
+            "sharpe",
+            "sortino",
+            "calmar",
+            "annualized_return",
+            "annualized_volatility",
+            "avg_daily_return",
+            "n_days",
+            "max_concurrent",
+            "no_leverage_ok"
+          ],
+          "meaning": "daily marked-to-market portfolio/equity curve over the tested window"
+        },
+        "classification": {
+          "metrics": [
+            "accuracy",
+            "precision",
+            "recall",
+            "f1",
+            "confusion",
+            "false_buy_pct",
+            "false_sell_pct",
+            "roc_auc",
+            "calibration_brier",
+            "trade_accuracy"
+          ],
+          "meaning": "P(up)>=0.5 decision vs actual direction on the tested rows"
+        }
+      },
+      "model": "random",
+      "calibrated": "n/a"
+    },
+    {
+      "cum_return": -0.1077,
+      "max_dd": -0.1554,
+      "sharpe": -1.9871,
+      "sortino": -1.6772,
+      "calmar": -0.7644,
+      "annualized_return": -0.1188,
+      "annualized_volatility": 0.0626,
+      "avg_daily_return": -0.0005,
+      "n_days": 228.0,
+      "max_concurrent": 11.0,
+      "no_leverage_ok": "yes",
+      "trade_accuracy": 0.2083,
+      "n_trades": 24.0,
+      "win_rate": 0.1667,
+      "avg_return": -4486.2403,
+      "profit_factor": 0.1405,
+      "accuracy": 0.5455,
+      "precision": 0.2083,
+      "recall": 0.1923,
+      "f1": 0.2,
+      "false_buy_pct": 0.7917,
+      "false_sell_pct": 0.3281,
+      "roc_auc": 0.3741,
+      "calibration_brier": 0.251,
+      "confusion": {
+        "tn": 43.0,
+        "fp": 19.0,
+        "fn": 21.0,
+        "tp": 5.0,
+        "n": 88.0
+      },
+      "metric_groups": {
+        "per_bet": {
+          "metrics": [
+            "n_trades",
+            "win_rate",
+            "avg_return",
+            "profit_factor"
+          ],
+          "meaning": "per completed horizon-day bet (one settled position; entry Close[T], exit Close[T+horizon])"
+        },
+        "daily_equity_curve": {
+          "metrics": [
+            "cum_return",
+            "max_dd",
+            "sharpe",
+            "sortino",
+            "calmar",
+            "annualized_return",
+            "annualized_volatility",
+            "avg_daily_return",
+            "n_days",
+            "max_concurrent",
+            "no_leverage_ok"
+          ],
+          "meaning": "daily marked-to-market portfolio/equity curve over the tested window"
+        },
+        "classification": {
+          "metrics": [
+            "accuracy",
+            "precision",
+            "recall",
+            "f1",
+            "confusion",
+            "false_buy_pct",
+            "false_sell_pct",
+            "roc_auc",
+            "calibration_brier",
+            "trade_accuracy"
+          ],
+          "meaning": "P(up)>=0.5 decision vs actual direction on the tested rows"
+        }
+      },
+      "model": "shuffled_control",
+      "calibrated": "raw"
+    },
+    {
+      "model": "buy_hold",
+      "accuracy": 0.4375,
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "roc_auc": null,
+      "calibration_brier": null,
+      "win_rate": 0.0,
+      "avg_return": -0.2475,
+      "cum_return": -0.2475,
+      "max_dd": -0.4037,
+      "sharpe": -0.9643,
+      "sortino": -1.2888,
+      "calmar": -0.6705,
+      "profit_factor": null,
+      "annualized_return": -0.2707,
+      "annualized_volatility": 0.2848,
+      "n_days": 228.0,
+      "max_concurrent": 1.0,
+      "n_trades": 1.0,
+      "no_leverage_ok": "yes",
+      "calibrated": "n/a"
+    }
+  ],
+  "explanation": {
+    "model": "rf",
+    "baseline_prob": 0.3586,
+    "delta_scale": "0.15 * train-std (per feature)",
+    "factors": [
+      {
+        "factor": "rel_ret_nifty50_60d",
+        "impact": -0.0279,
+        "direction": "negative"
+      },
+      {
+        "factor": "beta_alpha",
+        "impact": -0.0251,
+        "direction": "negative"
+      },
+      {
+        "factor": "OBV_slope",
+        "impact": 0.0214,
+        "direction": "positive"
+      },
+      {
+        "factor": "regime_nifty_vol_pctile",
+        "impact": -0.0068,
+        "direction": "negative"
+      },
+      {
+        "factor": "residual_vol",
+        "impact": -0.0062,
+        "direction": "negative"
+      },
+      {
+        "factor": "vol_pctile_252d",
+        "impact": -0.0047,
+        "direction": "negative"
+      },
+      {
+        "factor": "residual_vol_pctile",
+        "impact": -0.0046,
+        "direction": "negative"
+      },
+      {
+        "factor": "ma_slope_sma200_5d",
+        "impact": -0.0044,
+        "direction": "negative"
+      }
+    ]
+  },
+  "monitor": {
+    "mode": "degraded",
+    "freshness": {
+      "status": "fresh",
+      "age_days": 2,
+      "last_date": "2026-09-04 00:00:00",
+      "max_days": 7
+    },
+    "max_feature_psi": 7.9277,
+    "prediction_drift": {
+      "psi": 4.243501657899081,
+      "alarm": true,
+      "threshold": 0.25
+    },
+    "calibration_drift": {
+      "reference_brier": 0.24557056399113147,
+      "current_brier": 0.3305191475830584,
+      "delta": 0.08494858359192692,
+      "alarm": true,
+      "threshold": 0.05
+    },
+    "alarms": [
+      "feature_drift",
+      "prediction_drift",
+      "calibration_drift"
+    ]
+  },
+  "snapshot": {
+    "prediction_id": "TCS_v1_20260906T200500720124",
+    "symbol": "TCS",
+    "data_timestamp": "2026-09-06T20:05:00.720193+00:00",
+    "feature_version": "v1",
+    "model_version": "baseline-v1",
+    "training_period": "PRE_TRAINING",
+    "prediction_timestamp": "2026-09-06T20:05:00.720208+00:00",
+    "feature_snapshot": {
+      "Open": 2330.0,
+      "High": 2363.8999,
+      "Low": 2302.3999,
+      "Close": 2304.0,
+      "Adj Close": 2304.0,
+      "Volume": 2564322.0,
+      "BB_upper": 2434.2119,
+      "BB_mid": 2331.02,
+      "BB_lower": 2227.8281,
+      "BB_width": 0.0885,
+      "BB_pctB": 0.3691,
+      "ATR": 60.7172,
+      "ATR_pct": 0.0264,
+      "ADX": 12.5995,
+      "plus_DI": 21.4746,
+      "minus_DI": 21.278,
+      "CCI": -13.9123,
+      "OBV": -250446061.0,
+      "OBV_slope": 0.0376,
+      "MFI": 31.3401,
+      "roc_1d": -0.6939,
+      "roc_5d": -1.6225,
+      "roc_10d": 0.0869,
+      "roc_20d": -6.0627,
+      "mom_10d": 2.0,
+      "ret_1d": -0.0069,
+      "ret_3d": -0.0274,
+      "ret_5d": -0.0162,
+      "ret_10d": 0.0009,
+      "ret_20d": -0.0606,
+      "ret_60d": 0.066,
+      "ret_120d": -0.0437,
+      "dist_sma20": -0.0116,
+      "dist_sma50": 0.0145,
+      "dist_sma200": -0.1129,
+      "dist_ema50": -0.0012,
+      "ma_slope_sma20_5d": -0.0092,
+      "ma_slope_sma50_5d": 0.0112,
+      "ma_slope_sma200_5d": -0.0073,
+      "ma_cross_20_50": 0.0,
+      "ma_spread_20_50": 0.0264,
+      "ma_cross_20_200": 0.0,
+      "ma_spread_20_200": -0.1025,
+      "ha_body_pct": -0.0057,
+      "ha_direction": -1.0,
+      "pivot_high": 2399.3,
+      "pivot_low": 2243.8999,
+      "pivot_dist_high_pct": -0.0397,
+      "pivot_dist_low_pct": 0.0268,
+      "fib_level_pct": 0.6314,
+      "fib_dist_382": 0.003,
+      "fib_dist_618": 0.0561,
+      "sma20": 2331.02,
+      "sma50": 2271.054,
+      "rsi": 48.0974,
+      "macd": 5.4064,
+      "macd_signal": 8.8476,
+      "macd_histogram": -3.4412,
+      "vol_20d": 0.2613,
+      "vol_60d": 0.3278,
+      "down_vol_20d": 0.1951,
+      "vol_pctile_252d": 0.5437,
+      "vol_exp_5d": 0.8005,
+      "hl_range_20d": 0.0234,
+      "gap_freq_20d": 0.15,
+      "max_dd_60d": -0.1081,
+      "rel_ret_nifty50_10d": 0.0155,
+      "rel_ret_nifty50_20d": -0.0332,
+      "rel_ret_nifty50_60d": 0.0471,
+      "rel_rs_ratio_nifty50_20d": -0.0342,
+      "rel_corr_nifty50_60d": 0.4155,
+      "rel_vol_ratio_nifty50_20d": 4.9263,
+      "beta": 1.3004,
+      "beta_alpha": 0.0008,
+      "beta_r2": 0.1727,
+      "residual_ret": -0.0083,
+      "residual_vol": 0.0156,
+      "residual_vol_pctile": 0.4563,
+      "regime_trend": -1.0,
+      "regime_vol": -1.0,
+      "regime_nifty_vol_pctile": 0.0159,
+      "regime_risk": 0.0,
+      "regime_vix_pctile": 0.1667,
+      "alpha_momentum": 0.6892,
+      "alpha_mean_reversion": 0.5423,
+      "alpha_volatility": 0.2222,
+      "event_count_5d": 0.0,
+      "event_today": 0.0,
+      "fund_pe": 16.7503,
+      "fund_eps": 137.55,
+      "fund_roe": 0.4774,
+      "fund_roce": 0.5493,
+      "fund_de": 10.211,
+      "fund_opm": 0.2396,
+      "fund_rev_growth": 0.139,
+      "fund_profit_growth": 0.046,
+      "fund_score": 18.53
+    },
+    "model_probability": 0.4268,
+    "signal": "SELL",
+    "actual_future_outcome": null,
+    "ensemble_version": "ensemble-v1",
+    "calibration_method": "isotonic",
+    "calibrated_probability": 0.4,
+    "calibrated_signal": "SELL"
+  }
+}

@@ -20,13 +20,14 @@ import { RawDataTable } from "@/components/stock/RawDataTable";
 import { useWatchlistStore } from "@/store/watchlistStore";
 import { useHistoryStore } from "@/store/historyStore";
 import { useStockPrice } from "@/hooks/useStock";
-import { useSignal } from "@/hooks/useSignal";
 import { useNews } from "@/hooks/useNews";
 import { useShareholding } from "@/hooks/useShareholding";
 import { useFullAnalysis } from "@/hooks/useFullAnalysis";
+import { useForecast } from "@/hooks/useForecast";
+import { ForecastCard } from "@/components/stock/ForecastCard";
 import { motion, AnimatePresence } from "framer-motion";
 
-const TAB_IDS = ["technical", "raw-data", "fundamentals", "ownership", "news", "signal"] as const;
+const TAB_IDS = ["technical", "raw-data", "fundamentals", "ownership", "news", "forecast"] as const;
 type TabId = (typeof TAB_IDS)[number];
 
 const TABS = [
@@ -35,7 +36,7 @@ const TABS = [
   { id: "fundamentals", label: "Fundamentals" },
   { id: "ownership", label: "Ownership" },
   { id: "news", label: "News" },
-  { id: "signal", label: "Signal" },
+  { id: "forecast", label: "Forecast" },
 ];
 
 export default function StockDetailPage() {
@@ -64,10 +65,6 @@ export default function StockDetailPage() {
     isLoading: historyLoading,
   } = useStockPrice(symbol);
   const {
-    data: signalData,
-    isLoading: signalLoading,
-  } = useSignal(symbol);
-  const {
     data: newsData,
     isLoading: newsLoading,
   } = useNews(symbol);
@@ -75,6 +72,14 @@ export default function StockDetailPage() {
     data: shareholdingData,
     isLoading: shareholdingLoading,
   } = useShareholding(symbol);
+  const {
+    data: forecastData,
+    isLoading: forecastLoading,
+    isFetching: forecastFetching,
+    isError: forecastError,
+    error: forecastErrorObj,
+    refetch: refetchForecast,
+  } = useForecast(symbol, { enabled: !analysisData?.forecast });
 
   useEffect(() => {
     if (!symbol) return;
@@ -95,11 +100,9 @@ export default function StockDetailPage() {
     }
   }, [symbol, isWatched, watchlist]);
 
-  const isLoading = analysisLoading || historyLoading || signalLoading;
+  const isLoading = analysisLoading || historyLoading;
   const hasError = analysisError;
   const noData = !isLoading && !hasError && (!analysisData || !analysisData.quote);
-  const signalInfo = signalData?.signal ?? analysisData?.signal ?? null;
-  const signalLoadingState = signalLoading || (!signalData && analysisLoading);
 
   if (!symbol) {
     return (
@@ -324,32 +327,15 @@ export default function StockDetailPage() {
                 />
               )}
 
-              {activeTab === "signal" && (
-                !signalLoadingState && !signalInfo ? (
-                  <div className="flex flex-col items-center justify-center py-20 text-center px-6">
-                    <div className="mb-4 size-12 rounded-xl border border-dashed border-neutral-700 flex items-center justify-center text-neutral-600">
-                      <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-base font-semibold text-neutral-300">No signal data</h3>
-                    <p className="mt-1 text-sm text-neutral-500 max-w-sm">
-                      A trade signal could not be generated for {symbol} due to insufficient data.
-                    </p>
-                    <button
-                      onClick={() => refetchAnalysis()}
-                      className="mt-6 rounded-xl bg-accent-500/10 px-5 py-2.5 text-sm font-medium text-accent-500 border border-accent-500/20 hover:bg-accent-500/20 transition-colors"
-                    >
-                      Retry
-                    </button>
-                  </div>
-                ) : (
-                  <TradeSignal
-                    signal={signalInfo}
-                    price={signalData?.quote ? { price: signalData.quote.price, change: signalData.quote.change, changePercent: signalData.quote.changePercent } : analysisData?.quote ? { price: analysisData.quote.currentPrice, change: analysisData.quote.change, changePercent: analysisData.quote.changePercent } : null}
-                    loading={signalLoadingState}
-                  />
-                )
+              {activeTab === "forecast" && (
+                <ForecastCard
+                  forecast={analysisData?.forecast ?? forecastData ?? null}
+                  loading={(analysisLoading || forecastLoading) && !analysisData?.forecast}
+                  retrying={forecastFetching && (forecastError || !forecastData)}
+                  error={!!forecastError && !analysisData?.forecast}
+                  errorMessage={forecastErrorObj?.message}
+                  onRetry={() => refetchForecast()}
+                />
               )}
 
               {activeTab === "raw-data" && (

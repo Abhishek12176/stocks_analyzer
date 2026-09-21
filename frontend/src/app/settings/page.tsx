@@ -1,9 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { useUiStore } from "@/store/uiStore";
-import { apiPost } from "@/lib/api";
+import { apiPost, apiGet } from "@/lib/api";
+
+interface ApiKeyInfo {
+  field: string;
+  label: string;
+  display: string;
+  help: string;
+  configured: boolean;
+  masked: string | null;
+}
 
 export default function SettingsPage() {
   const { theme, setTheme } = useUiStore();
@@ -13,6 +24,56 @@ export default function SettingsPage() {
   const [rating, setRating] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
+
+  const [apiKeys, setApiKeys] = useState<ApiKeyInfo[]>([]);
+  const [keysLoading, setKeysLoading] = useState(true);
+  const [keysError, setKeysError] = useState<string | null>(null);
+  const [keyInputs, setKeyInputs] = useState<Record<string, string>>({});
+  const [savingKeys, setSavingKeys] = useState(false);
+  const [keysSaved, setKeysSaved] = useState(false);
+
+  const loadApiKeys = async () => {
+    setKeysLoading(true);
+    setKeysError(null);
+    try {
+      const res = await apiGet<{ keys: ApiKeyInfo[] }>("/settings/api-keys");
+      setApiKeys(res.keys);
+    } catch {
+      setKeysError("Could not load API key status.");
+    } finally {
+      setKeysLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadApiKeys();
+  }, []);
+
+  const handleSaveKeys = async () => {
+    const changed = Object.entries(keyInputs).filter(([, v]) => v.trim().length > 0);
+    if (changed.length === 0) {
+      setKeysError("Type a key value first, or clear the inputs and cancel.");
+      return;
+    }
+    setSavingKeys(true);
+    setKeysError(null);
+    setKeysSaved(false);
+    const payload: Record<string, string> = {};
+    changed.forEach(([field, value]) => {
+      payload[field] = value;
+    });
+    try {
+      const res = await apiPost<{ keys: ApiKeyInfo[] }>("/settings/api-keys", payload);
+      setApiKeys(res.keys);
+      setKeyInputs({});
+      setKeysSaved(true);
+      setTimeout(() => setKeysSaved(false), 4000);
+    } catch (e) {
+      setKeysError(e instanceof Error ? e.message : "Failed to save API key.");
+    } finally {
+      setSavingKeys(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,15 +132,95 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* API Keys placeholder */}
+        {/* API Keys */}
         <section>
           <h2 className="text-base font-semibold text-neutral-200 mb-4">
             API Keys
           </h2>
-          <div className="rounded-xl border border-neutral-800 p-5">
-            <p className="text-sm text-neutral-500">
-              API key configuration will be available here.
-            </p>
+          <div className="rounded-xl border border-neutral-800 p-5 space-y-4">
+            {keysLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-14 w-full" />
+                <Skeleton className="h-14 w-full" />
+              </div>
+            ) : keysError && apiKeys.length === 0 ? (
+              <div className="flex flex-col items-start gap-3">
+                <p className="text-sm text-signal-bearish">{keysError}</p>
+                <Button variant="secondary" size="sm" onClick={loadApiKeys}>
+                  Retry
+                </Button>
+              </div>
+            ) : (
+              <>
+                <p className="text-xs text-neutral-500 leading-relaxed">
+                  Keys are stored in <code className="text-neutral-400">backend/.env</code> and
+                  are never returned to the browser. Configured keys take effect immediately
+                  without restarting the server.
+                </p>
+
+                {apiKeys.map((key) => (
+                  <div
+                    key={key.field}
+                    className="rounded-lg border border-neutral-800 bg-neutral-900/40 p-4"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-neutral-200">{key.display}</p>
+                        <p className="text-xs text-neutral-500 mt-0.5">{key.help}</p>
+                      </div>
+                      {key.configured ? (
+                        <Badge variant="bullish">{key.masked}</Badge>
+                      ) : (
+                        <Badge variant="neutral">Not configured</Badge>
+                      )}
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                      <input
+                        type="password"
+                        autoComplete="off"
+                        value={keyInputs[key.field] ?? ""}
+                        onChange={(e) =>
+                          setKeyInputs((prev) => ({ ...prev, [key.field]: e.target.value }))
+                        }
+                        placeholder={
+                          key.configured
+                            ? "Paste a new key to replace the current one"
+                            : "Paste your API key"
+                        }
+                        className="flex-1 rounded-lg border border-neutral-800 bg-neutral-900/60 px-3 py-2 text-sm text-neutral-50 placeholder-neutral-600 focus:outline-none focus:border-accent-500/40 transition-colors"
+                      />
+                    </div>
+                  </div>
+                ))}
+
+                <div className="flex items-center gap-3 pt-1">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    loading={savingKeys}
+                    onClick={handleSaveKeys}
+                  >
+                    Save Keys
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setKeyInputs({})}
+                  >
+                    Clear
+                  </Button>
+                  {keysSaved && (
+                    <span className="text-xs text-signal-bullish">
+                      Keys saved successfully
+                    </span>
+                  )}
+                </div>
+
+                {keysError && apiKeys.length > 0 && (
+                  <p className="text-sm text-signal-bearish">{keysError}</p>
+                )}
+              </>
+            )}
           </div>
         </section>
 

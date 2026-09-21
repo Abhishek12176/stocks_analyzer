@@ -23,6 +23,8 @@ class ChatResponse(BaseModel):
     intent: dict
     source: str
     generatedAt: str
+    forecasts: dict | None = None
+    contexts: dict | None = None
 
 
 @router.post("", response_model=ChatResponse)

@@ -189,6 +189,12 @@ async def get_full_analysis(symbol: str):
     async def fetch_fundamentals():
         return await asyncio.to_thread(fundamentals_service.get_fundamentals, clean, "NSE")
 
+    async def fetch_forecast():
+        # The probabilistic forecast is expensive (90s+ cold). Running it here
+        # would stall the whole analysis page; the <forecast> tab loads it on
+        # demand via /stock/{symbol}/forecast (fast=default, cached).
+        return None
+
     price_data = None
     fundamentals_raw = None
 
@@ -206,8 +212,9 @@ async def get_full_analysis(symbol: str):
             logger.warning("Fundamentals fetch timed out for %s", clean)
             return None
 
-    price_data, fundamentals_raw = await asyncio.gather(
-        fetch_price_with_timeout(), fetch_fundamentals_with_timeout(), return_exceptions=True
+    price_data, fundamentals_raw, forecast_block = await asyncio.gather(
+        fetch_price_with_timeout(), fetch_fundamentals_with_timeout(),
+        fetch_forecast(), return_exceptions=True,
     )
 
     if isinstance(price_data, Exception):
@@ -216,6 +223,8 @@ async def get_full_analysis(symbol: str):
     if isinstance(fundamentals_raw, Exception):
         logger.error("Fundamentals fetch failed for %s: %s", clean, fundamentals_raw)
         fundamentals_raw = None
+    if isinstance(forecast_block, Exception) or not isinstance(forecast_block, dict):
+        forecast_block = None
 
     f = fundamentals_raw or {}
 
@@ -298,4 +307,5 @@ async def get_full_analysis(symbol: str):
         "fundamentals": fundamentals,
         "score": score,
         "signal": signal["signal"],
+        "forecast": forecast_block,
     }

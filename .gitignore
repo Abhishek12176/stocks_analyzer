@@ -30,6 +30,12 @@ out/
 # Backend data (ephemeral runtime data)
 backend/data/
 
+# Benchmark outputs (Task 11 — regenerated offline runs; large JSON/text)
+backend/ml_benchmark/
+
+# Task 16 pooled-model research outputs (regenerated; not production artifacts)
+backend/ml_v2_pooled_models/
+
 # Nested duplicate copy of the project
 /stocks_analyzer-main/
 
@@ -51,3 +57,19 @@ Thumbs.db
 # Logs
 *.log
 logs/
+
+# Research / generated ML artifacts (regenerable offline runs)
+backend/ml_*/
+backend/forecasts/
+backend/predictions/
+
+# Pytest
+.pytest_cache/
+
+# Local scratch test files
+backend/_*.err
+backend/_*.pid
+backend/_*.out
+backend/_*.cmd
+backend/_*.bat
+backend/_repro.py

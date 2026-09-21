@@ -25,6 +25,8 @@ ALL_SYMBOLS = [
     "TATAMOTORS", "HEROMOTOCO", "ASHOKLEY", "BALKRISIND", "TVSMOTOR", "MOTHERSUMI",
     "CIPLA", "DIVISLAB", "AUROPHARMA", "LUPIN", "BIOCON", "TORNTPHARM", "ALKEM", "PFIZER", "CADILAHC",
     "ONGC", "IOC", "BPCL", "GAIL", "POWERGRID", "ADANIGREEN", "TATAPOWER", "COALINDIA", "HINDPETRO",
+    # Popular low-priced names so "penny / under ₹100" screening yields real picks.
+    "SUZLON", "YESBANK", "IDBI", "VI", "NHPC", "JPPOWER", "NMDC", "SAIL", "IRFC", "RVNL", "NBCC",
 ]
 
 CATEGORY_ORDER = [
@@ -80,6 +82,20 @@ def _fetch_one(symbol: str) -> dict | None:
         sma20 = float(sma(hist["Close"], length=20).iloc[-1]) if len(hist) >= 20 else None
         sma50 = float(sma(hist["Close"], length=50).iloc[-1]) if len(hist) >= 50 else None
 
+        # N-day trend info (for "N din se bullish" chat queries)
+        closes = hist["Close"]
+        up_days = 0
+        for i in range(len(closes) - 1, 0, -1):
+            if closes.iloc[i] > closes.iloc[i - 1]:
+                up_days += 1
+            else:
+                break
+
+        def _ret(n):
+            if len(closes) > n:
+                return round((closes.iloc[-1] / closes.iloc[-1 - n] - 1) * 100, 2)
+            return None
+
         sig = generate_trade_signal(
             price=current_price,
             rsi=rsi_val,
@@ -108,6 +124,13 @@ def _fetch_one(symbol: str) -> dict | None:
             "sma50": sma50,
             "trend": "Strong Trend" if is_strong_trend else "Weak Trend",
             "sparkline": sparkline,
+            "upDaysConsecutive": up_days,
+            "ret3d": _ret(3),
+            "ret5d": _ret(5),
+            "ret7d": _ret(7),
+            "ret10d": _ret(10),
+            "ret15d": _ret(15),
+            "ret20d": _ret(20),
         }
     except Exception as exc:
         logger.debug("Signal scan failed for %s: %s", symbol, exc)

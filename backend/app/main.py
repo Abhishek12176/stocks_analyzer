@@ -9,7 +9,8 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.core.middleware import RateLimitMiddleware
-from app.routes import stock, watchlist, compare, market, feedback, health, signals, chat
+from app.routes import stock, watchlist, compare, market, feedback, health, signals, chat, forecast, ml
+from app.routes import settings as settings_router
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -117,6 +118,9 @@ app.include_router(feedback.router, prefix="/api/v1")
 app.include_router(health.router, prefix="/api/v1")
 app.include_router(signals.router, prefix="/api/v1")
 app.include_router(chat.router, prefix="/api/v1")
+app.include_router(forecast.router, prefix="/api/v1")
+app.include_router(ml.router, prefix="/api/v1")
+app.include_router(settings_router.router, prefix="/api/v1")
 
 # AI Chat Assistant alias — the requested endpoint path
 app.include_router(chat.router, prefix="/api")

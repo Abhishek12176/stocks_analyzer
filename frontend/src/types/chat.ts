@@ -38,4 +38,6 @@ export interface ChatResponse {
   intent: ChatIntent;
   source: "llm" | "existing-model";
   generatedAt: string;
+  forecasts?: Record<string, unknown>;
+  contexts?: Record<string, unknown>;
 }

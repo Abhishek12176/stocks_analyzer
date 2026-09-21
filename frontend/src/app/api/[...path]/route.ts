@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 // For local dev, create a .env.local file with BACKEND_URL=http://localhost:8000
 const BACKEND_URL = process.env.BACKEND_URL || "https://stocks-analyzer-9fg7.onrender.com";
 
-const FETCH_TIMEOUT = 90_000;
+const FETCH_TIMEOUT = 240_000;
 
 async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
   const controller = new AbortController();
