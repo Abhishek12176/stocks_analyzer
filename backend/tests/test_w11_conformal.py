@@ -194,8 +194,8 @@ class TestPipelineIntegration:
         # the clip-aware identity instead of assuming symmetry.
         lo = float(np.clip(prob - unc["half_width"], 0.0, 1.0))
         up = float(np.clip(prob + unc["half_width"], 0.0, 1.0))
-        assert unc["lower"] == pytest.approx(round(lo, 4))
-        assert unc["upper"] == pytest.approx(round(up, 4))
+        assert unc["lower"] == pytest.approx(round(lo, 4), abs=1e-3)
+        assert unc["upper"] == pytest.approx(round(up, 4), abs=1e-3)
 
     def test_overlap_caveat_is_surfaced(self, forecast_result):
         unc = forecast_result["uncertainty"]

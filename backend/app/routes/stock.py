@@ -59,20 +59,23 @@ async def get_stock_fundamentals(symbol: str):
     f = fundamentals_service.get_fundamentals(clean, "NSE")
 
     def pct(val):
-        return round(val * 100, 2) if val is not None else None
+        return round(float(val) * 100, 2) if val is not None else None
+
+    def flt(val):
+        return round(float(val), 2) if val is not None else None
 
     fundamentals = {
-        "market_cap": f.get("market_cap"),
-        "pe_ratio": f.get("pe_ratio"),
-        "eps": f.get("eps"),
-        "book_value": None,
-        "dividend_yield": None,
+        "market_cap": flt(f.get("market_cap")),
+        "pe_ratio": flt(f.get("pe_ratio")),
+        "eps": flt(f.get("eps")),
+        "book_value": flt(f.get("book_value")),
+        "dividend_yield": flt(f.get("dividend_yield")),
         "roe": pct(f.get("roe")),
         "roce": pct(f.get("roce")),
-        "debt_equity": f.get("debt_to_equity"),
+        "debt_equity": flt(f.get("debt_to_equity")),
         "de_category": f.get("de_category", ""),
         "opm": pct(f.get("operating_margin")),
-        "npm": None,
+        "npm": pct(f.get("net_profit_margin")),
         "gross_margin": None,
         "current_ratio": None,
         "interest_coverage": None,
@@ -85,7 +88,7 @@ async def get_stock_fundamentals(symbol: str):
         "inventory_turnover": None,
         "receivables_days": None,
         "pe_vs_sector": None,
-        "pb_ratio": None,
+        "pb_ratio": flt(f.get("pb_ratio")),
         "ev_ebitda": None,
         "piotroski_f_score": None,
         "promoter_holding": None,
@@ -96,17 +99,18 @@ async def get_stock_fundamentals(symbol: str):
         "sector": f.get("sector", ""),
     }
 
-    score_val = f.get("fundamental_score", 0) or 0
+    score_val = float(f.get("fundamental_score", 0) or 0)
     rating = f.get("rating", "N/A") or "N/A"
     score_color = (
-        "green" if score_val >= 65 else "gold" if score_val >= 45 else "red"
+        f.get("rating_color")
+        or ("green" if score_val >= 65 else "gold" if score_val >= 45 else "red")
     )
 
     score_obj = {
         "total": score_val,
         "rating": rating,
         "rating_color": score_color,
-        "categories": [],
+        "categories": f.get("categories", []),
     }
 
     return FundamentalsResponse(fundamentals=fundamentals, score=score_obj)
@@ -229,20 +233,23 @@ async def get_full_analysis(symbol: str):
     f = fundamentals_raw or {}
 
     def pct(val):
-        return round(val * 100, 2) if val is not None else None
+        return round(float(val) * 100, 2) if val is not None else None
+
+    def flt(val):
+        return round(float(val), 2) if val is not None else None
 
     fundamentals = {
-        "market_cap": f.get("market_cap"),
-        "pe_ratio": f.get("pe_ratio"),
-        "eps": f.get("eps"),
-        "book_value": None,
-        "dividend_yield": None,
+        "market_cap": flt(f.get("market_cap")),
+        "pe_ratio": flt(f.get("pe_ratio")),
+        "eps": flt(f.get("eps")),
+        "book_value": flt(f.get("book_value")),
+        "dividend_yield": flt(f.get("dividend_yield")),
         "roe": pct(f.get("roe")),
         "roce": pct(f.get("roce")),
-        "debt_equity": f.get("debt_to_equity"),
+        "debt_equity": flt(f.get("debt_to_equity")),
         "de_category": f.get("de_category", ""),
         "opm": pct(f.get("operating_margin")),
-        "npm": None,
+        "npm": pct(f.get("net_profit_margin")),
         "gross_margin": None,
         "current_ratio": None,
         "interest_coverage": None,
@@ -255,7 +262,7 @@ async def get_full_analysis(symbol: str):
         "inventory_turnover": None,
         "receivables_days": None,
         "pe_vs_sector": None,
-        "pb_ratio": None,
+        "pb_ratio": flt(f.get("pb_ratio")),
         "ev_ebitda": None,
         "piotroski_f_score": None,
         "promoter_holding": None,
@@ -266,17 +273,18 @@ async def get_full_analysis(symbol: str):
         "sector": f.get("sector", ""),
     }
 
-    score_val = f.get("fundamental_score", 0) or 0
+    score_val = float(f.get("fundamental_score", 0) or 0)
     rating = f.get("rating", "N/A") or "N/A"
     score_color = (
-        "green" if score_val >= 65 else "gold" if score_val >= 45 else "red"
+        f.get("rating_color")
+        or ("green" if score_val >= 65 else "gold" if score_val >= 45 else "red")
     )
 
     score = {
         "total": score_val,
         "rating": rating,
         "rating_color": score_color,
-        "categories": [],
+        "categories": f.get("categories", []),
     }
 
     quote_data = (price_data or {}).get("quote", {})

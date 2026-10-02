@@ -125,7 +125,7 @@ def _is_forecast_expired(rec: dict[str, Any], max_age_hours: float = _FORECAST_C
     """Check if a cached forecast record has expired based on its generation timestamp."""
     gen_time_str = rec.get("generated_at")
     if not gen_time_str:
-        return True
+        return False
     try:
         gen_dt = datetime.fromisoformat(gen_time_str.replace("Z", "+00:00"))
         now_dt = datetime.now(timezone.utc)
@@ -159,7 +159,7 @@ def _forecast_cache_get(
             if isinstance(rec, dict) and not _is_forecast_expired(rec):
                 if fingerprint is None or rec.get("data_fingerprint") == fingerprint:
                     return rec
-                return rec
+                return None
 
         # 2. Fallback to latest available cached date if still valid
         latest_key = sorted(items.keys())[-1]

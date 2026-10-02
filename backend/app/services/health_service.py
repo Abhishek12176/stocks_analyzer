@@ -45,10 +45,10 @@ class SourceHealthChecker:
         try:
             import yfinance as yf
             ticker = yf.Ticker("RELIANCE.NS")
-            info = ticker.info or {}
-            if info.get("symbol") or info.get("regularMarketPrice"):
+            hist = ticker.history(period="1d")
+            if not hist.empty:
                 return SourceHealth("yfinance", "ok", (time.time() - start) * 1000)
-            return SourceHealth("yfinance", "error", (time.time() - start) * 1000, "No data returned")
+            return SourceHealth("yfinance", "error", (time.time() - start) * 1000, "No price data returned")
         except Exception as e:
             return SourceHealth("yfinance", "error", (time.time() - start) * 1000, str(e))
 
