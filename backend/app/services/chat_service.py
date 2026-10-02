@@ -936,16 +936,44 @@ def _build_llm_messages(message: str, stocks: list[dict], history: list | None,
     return messages
 
 
+_last_llm_error: str | None = None
+
+
+def _effective_endpoint() -> tuple[str, str]:
+    """Returns (chat_completions_url, model).
+    
+    Auto-detects Groq keys (gsk_*) to prevent routing them to OpenAI when
+    OPENAI_BASE_URL is left at its default 'https://api.openai.com/v1'.
+    Also translates decommissioned groq/compound models to llama-3.1-8b-instant.
+    """
+    key = (settings.openai_api_key or "").strip()
+    base_url = (settings.openai_base_url or "").strip().rstrip("/")
+    model = (settings.openai_model or "").strip()
+
+    if key.startswith("gsk_") and "openai.com" in base_url:
+        base_url = "https://api.groq.com/openai/v1"
+        if not model or model.startswith("gpt-") or "compound" in model:
+            model = "llama-3.1-8b-instant"
+
+    if model in ("groq/compound", "groq/compound-mini"):
+        model = "llama-3.1-8b-instant"
+
+    if not model:
+        model = "llama-3.1-8b-instant" if "groq" in base_url else "gpt-4o-mini"
+
+    return f"{base_url}/chat/completions", model
+
+
 async def _llm_reply(message: str, stocks: list[dict], history: list | None,
                      contexts: dict[str, dict] | None = None,
                      forecasts: dict[str, dict] | None = None) -> str:
-    url = settings.openai_base_url.rstrip("/") + "/chat/completions"
+    url, model = _effective_endpoint()
     headers = {
         "Authorization": f"Bearer {settings.openai_api_key}",
         "Content-Type": "application/json",
     }
     payload = {
-        "model": settings.openai_model,
+        "model": model,
         "temperature": settings.openai_temperature,
         "max_tokens": settings.openai_max_tokens,
         "messages": _build_llm_messages(message, stocks, history, contexts, forecasts),
@@ -1177,6 +1205,8 @@ def _fallback_reply(stocks: list[dict], intent: dict, hinglish: bool,
 
 async def process_chat(message: str, history: list | None = None) -> dict:
     """Main entrypoint: route -> detect symbols -> parse intent -> answer."""
+    global _last_llm_error
+    _last_llm_error = None
     message = (message or "").strip()
 
     if is_smalltalk(message):
@@ -1187,6 +1217,7 @@ async def process_chat(message: str, history: list | None = None) -> dict:
             "intent": {"maxPrice": None, "minPrice": None, "action": None, "top": 10},
             "source": "llm",
             "generatedAt": datetime.now(timezone.utc).isoformat(),
+            "llm_error": _last_llm_error,
         }
 
     if not is_stock_query(message):
@@ -1197,6 +1228,7 @@ async def process_chat(message: str, history: list | None = None) -> dict:
             "intent": {"maxPrice": None, "minPrice": None, "action": None, "top": 10},
             "source": "llm" if settings.openai_api_key else "existing-model",
             "generatedAt": datetime.now(timezone.utc).isoformat(),
+            "llm_error": _last_llm_error,
         }
 
     intent = parse_intent(message)
@@ -1230,6 +1262,7 @@ async def process_chat(message: str, history: list | None = None) -> dict:
             )
             used_llm = True
         except Exception as exc:
+            _last_llm_error = f"{type(exc).__name__}: {exc}"
             logger.warning("LLM chat failed, falling back to template: %s", exc)
             reply = None
 
@@ -1253,6 +1286,7 @@ async def process_chat(message: str, history: list | None = None) -> dict:
         "contexts": contexts,
         "source": "llm" if used_llm else "existing-model",
         "generatedAt": datetime.now(timezone.utc).isoformat(),
+        "llm_error": _last_llm_error,
     }
 
 
@@ -1270,13 +1304,13 @@ Keep it under 40 words. Then invite them to ask about NSE stock predictions, for
 
 
 async def _llm_smalltalk(message: str) -> str:
-    url = settings.openai_base_url.rstrip("/") + "/chat/completions"
+    url, model = _effective_endpoint()
     headers = {
         "Authorization": f"Bearer {settings.openai_api_key}",
         "Content-Type": "application/json",
     }
     payload = {
-        "model": settings.openai_model,
+        "model": model,
         "temperature": settings.openai_temperature,
         "max_tokens": 150,
         "messages": [
@@ -1372,10 +1406,12 @@ def _fallback_smalltalk(message: str, hinglish: bool) -> str:
 
 
 async def _smalltalk_reply(message: str) -> str:
+    global _last_llm_error
     if settings.openai_api_key:
         try:
             return await _llm_smalltalk(message)
         except Exception as exc:
+            _last_llm_error = f"{type(exc).__name__}: {exc}"
             logger.warning("LLM smalltalk failed, using template: %s", exc)
     return _fallback_smalltalk(message, _hinglish_requested(message))
 
@@ -1541,7 +1577,7 @@ Rules:
 
 
 async def _llm_general(message: str, history: list | None) -> str:
-    url = settings.openai_base_url.rstrip("/") + "/chat/completions"
+    url, model = _effective_endpoint()
     headers = {
         "Authorization": f"Bearer {settings.openai_api_key}",
         "Content-Type": "application/json",
@@ -1556,7 +1592,7 @@ async def _llm_general(message: str, history: list | None) -> str:
     messages.append({"role": "user", "content": message})
 
     payload = {
-        "model": settings.openai_model,
+        "model": model,
         "temperature": settings.openai_temperature,
         "max_tokens": settings.openai_max_tokens,
         "messages": messages,
@@ -1603,5 +1639,7 @@ async def _general_reply(message: str, history: list | None) -> str:
         try:
             return (await _llm_general(message, history)) + _financial_disclaimer(hinglish)
         except Exception as exc:
+            global _last_llm_error
+            _last_llm_error = f"{type(exc).__name__}: {exc}"
             logger.warning("LLM general chat failed, using template: %s", exc)
     return _fallback_general(message, hinglish) + _financial_disclaimer(hinglish)

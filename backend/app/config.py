@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic_settings import BaseSettings
 
 
@@ -13,11 +15,16 @@ class Settings(BaseSettings):
 
     # LLM (OpenAI-compatible) settings for the AI Chat Assistant
     openai_api_key: str = ""
+    groq_api_key: str = ""
     openai_base_url: str = "https://api.openai.com/v1"
     openai_model: str = "gpt-4o-mini"
     openai_max_tokens: int = 1000
     openai_temperature: float = 0.4
     chat_fallback_enabled: bool = True
+
+    def model_post_init(self, __context: Any) -> None:
+        if not self.openai_api_key and self.groq_api_key:
+            self.openai_api_key = self.groq_api_key
 
     # Chat enrichment: max symbols deep-dived per message + news headlines per symbol.
     chat_max_enrich_symbols: int = 2

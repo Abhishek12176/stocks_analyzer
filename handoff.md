@@ -7,6 +7,18 @@
 
 ## [DONE]
 
+> **LLM Chatbot Upgrade & Groq Decommissioning Fix (03-Oct-2026) — production:**
+> - Problem: Chatbot was falling back to deterministic templates because Groq decommissioned
+>   `groq/compound` on 21-Sep-2026, and `settings.openai_base_url` defaulted to OpenAI when users supply Groq `gsk_*` keys.
+> - Fix:
+>   - `chat_service._effective_endpoint()`: auto-detects Groq `gsk_*` keys and routes to `https://api.groq.com/openai/v1` with `llama-3.1-8b-instant`.
+>   - Translates any legacy `groq/compound` or `groq/compound-mini` model request to active production model `llama-3.1-8b-instant`.
+>   - Added `llm_error` field to `ChatResponse` model and tracked `_last_llm_error` so failures are transparently diagnosed.
+>   - `backend/app/config.py`: added `groq_api_key` support with automatic fallback to `openai_api_key`.
+>   - `backend/app/main.py`: mounted `/api/settings` alias so frontend web UI settings page `/settings` works without 404.
+>   - `render.yaml` & `backend/.env.example`: updated default Groq model from `groq/compound` to `llama-3.1-8b-instant`.
+>   - Tests: `tests/test_chat_service.py` 65 passed.
+
 > **Forecast latency/cache fix (21-Sep-2026) — production, no feature/model change:**
 > - `routes/forecast.py` `_TIMEOUT` 240 → 600s. A cold 10y forecast = 10y network pull +
 >   walk-forward ensemble training; measured 75.1s compute on a 2476-row frame (fast=True)

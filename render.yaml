@@ -26,7 +26,7 @@ services:
       - key: OPENAI_BASE_URL
         value: https://api.groq.com/openai/v1
       - key: OPENAI_MODEL
-        value: groq/compound
+        value: llama-3.1-8b-instant
       - key: RATE_LIMIT_PER_MINUTE
         value: "60"
       - key: CACHE_TTL_PRICE

@@ -25,6 +25,7 @@ class ChatResponse(BaseModel):
     generatedAt: str
     forecasts: dict | None = None
     contexts: dict | None = None
+    llm_error: str | None = None
 
 
 @router.post("", response_model=ChatResponse)
