@@ -937,41 +937,29 @@ def _build_llm_messages(message: str, stocks: list[dict], history: list | None,
 
 
 _last_llm_error: str | None = None
-
+_active_groq_model: str | None = None
 
 VALID_GROQ_MODELS = {
-    "llama-3.1-8b-instant",
     "llama-3.3-70b-versatile",
+    "llama-3.1-8b-instant",
     "llama-3.1-70b-versatile",
     "llama3-70b-8192",
     "llama3-8b-8192",
     "mixtral-8x7b-32768",
     "gemma2-9b-it",
+    "qwen-2.5-32b",
+    "deepseek-r1-distill-llama-70b",
 }
 
-
-def _effective_endpoint() -> tuple[str, str]:
-    """Returns (chat_completions_url, model).
-    
-    Guarantees valid routing:
-    - If key is a Groq key (gsk_*) or base_url is Groq: forces valid Groq endpoint & model.
-    - If model is invalid for Groq (e.g. 'openai', 'groq', 'compound', 'gpt-*'),
-      automatically uses 'llama-3.1-8b-instant'.
-    """
-    key = (settings.openai_api_key or "").strip()
-    base_url = (settings.openai_base_url or "").strip().rstrip("/")
-    model = (settings.openai_model or "").strip()
-
-    is_groq = key.startswith("gsk_") or "groq" in base_url.lower()
-
-    if is_groq:
-        base_url = "https://api.groq.com/openai/v1"
-        if model not in VALID_GROQ_MODELS:
-            model = "llama-3.1-8b-instant"
-    elif not model:
-        model = "gpt-4o-mini"
-
-    return f"{base_url}/chat/completions", model
+PREFERRED_GROQ_MODELS = [
+    "llama-3.3-70b-versatile",
+    "llama-3.1-8b-instant",
+    "llama-3.1-70b-versatile",
+    "llama3-70b-8192",
+    "llama3-8b-8192",
+    "mixtral-8x7b-32768",
+    "gemma2-9b-it",
+]
 
 
 def _format_exc(exc: Exception) -> str:
@@ -983,28 +971,104 @@ def _format_exc(exc: Exception) -> str:
     return f"{type(exc).__name__}: {exc}"
 
 
+async def _discover_groq_model(client: httpx.AsyncClient, headers: dict) -> str | None:
+    """Fetch active chat models from Groq /models endpoint."""
+    try:
+        resp = await client.get("https://api.groq.com/openai/v1/models", headers=headers, timeout=httpx.Timeout(5.0))
+        if resp.status_code == 200:
+            data = resp.json().get("data", [])
+            avail_ids = {m.get("id") for m in data if m.get("id")}
+            for pref in PREFERRED_GROQ_MODELS:
+                if pref in avail_ids:
+                    return pref
+            for m_id in avail_ids:
+                if not any(x in m_id.lower() for x in ("whisper", "guard", "embed", "tts", "moderation", "vision")):
+                    return m_id
+    except Exception as exc:
+        logger.debug("Groq model discovery failed: %s", exc)
+    return None
+
+
+async def _execute_chat_completion(
+    messages: list[dict],
+    max_tokens: int,
+    temperature: float,
+    timeout_sec: float = 45.0,
+) -> str:
+    """Executes a chat completion call with auto-discovery and candidate fallback."""
+    global _active_groq_model
+    key = (settings.openai_api_key or "").strip()
+    base_url = (settings.openai_base_url or "").strip().rstrip("/")
+    is_groq = key.startswith("gsk_") or "groq" in base_url.lower()
+
+    if not is_groq:
+        url = f"{base_url}/chat/completions"
+        model = (settings.openai_model or "").strip() or "gpt-4o-mini"
+        headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+        payload = {"model": model, "temperature": temperature, "max_tokens": max_tokens, "messages": messages}
+        async with httpx.AsyncClient(timeout=httpx.Timeout(timeout_sec)) as client:
+            resp = await client.post(url, json=payload, headers=headers)
+            resp.raise_for_status()
+            return resp.json()["choices"][0]["message"]["content"].strip()
+
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+
+    async with httpx.AsyncClient(timeout=httpx.Timeout(timeout_sec)) as client:
+        candidates: list[str] = []
+        if _active_groq_model:
+            candidates.append(_active_groq_model)
+
+        if not _active_groq_model:
+            discovered = await _discover_groq_model(client, headers)
+            if discovered and discovered not in candidates:
+                candidates.append(discovered)
+
+        configured_model = (settings.openai_model or "").strip()
+        if configured_model and configured_model in VALID_GROQ_MODELS and configured_model not in candidates:
+            candidates.append(configured_model)
+
+        for m in PREFERRED_GROQ_MODELS:
+            if m not in candidates:
+                candidates.append(m)
+
+        last_error: Exception | None = None
+        for cand in candidates:
+            payload = {
+                "model": cand,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+                "messages": messages,
+            }
+            try:
+                resp = await client.post(url, json=payload, headers=headers)
+                resp.raise_for_status()
+                _active_groq_model = cand
+                return resp.json()["choices"][0]["message"]["content"].strip()
+            except httpx.HTTPStatusError as err:
+                last_error = err
+                if err.response.status_code == 404:
+                    logger.warning("Groq model %s returned 404, trying next candidate...", cand)
+                    if _active_groq_model == cand:
+                        _active_groq_model = None
+                    continue
+                raise
+
+        if last_error:
+            raise last_error
+        raise RuntimeError("No suitable Groq model could be executed")
+
+
 async def _llm_reply(message: str, stocks: list[dict], history: list | None,
                      contexts: dict[str, dict] | None = None,
                      forecasts: dict[str, dict] | None = None) -> str:
-    url, model = _effective_endpoint()
-    headers = {
-        "Authorization": f"Bearer {settings.openai_api_key}",
-        "Content-Type": "application/json",
-    }
-    payload = {
-        "model": model,
-        "temperature": settings.openai_temperature,
-        "max_tokens": settings.openai_max_tokens,
-        "messages": _build_llm_messages(message, stocks, history, contexts, forecasts),
-    }
-
-    timeout = httpx.Timeout(60.0)
-    async with httpx.AsyncClient(timeout=timeout) as client:
-        resp = await client.post(url, json=payload, headers=headers)
-        resp.raise_for_status()
-        body = resp.json()
-
-    return body["choices"][0]["message"]["content"].strip()
+    messages = _build_llm_messages(message, stocks, history, contexts, forecasts)
+    return await _execute_chat_completion(
+        messages=messages,
+        max_tokens=settings.openai_max_tokens,
+        temperature=settings.openai_temperature,
+        timeout_sec=60.0,
+    )
 
 
 def _hinglish_requested(message: str) -> bool:
@@ -1229,23 +1293,27 @@ async def process_chat(message: str, history: list | None = None) -> dict:
     message = (message or "").strip()
 
     if is_smalltalk(message):
+        reply = await _smalltalk_reply(message)
+        used_llm = bool(settings.openai_api_key and not _last_llm_error)
         return {
-            "reply": await _smalltalk_reply(message),
+            "reply": reply,
             "stocks": [],
             "totalFound": 0,
             "intent": {"maxPrice": None, "minPrice": None, "action": None, "top": 10},
-            "source": "llm",
+            "source": "llm" if used_llm else "template",
             "generatedAt": datetime.now(timezone.utc).isoformat(),
             "llm_error": _last_llm_error,
         }
 
     if not is_stock_query(message):
+        reply = await _general_reply(message, history)
+        used_llm = bool(settings.openai_api_key and not _last_llm_error)
         return {
-            "reply": await _general_reply(message, history),
+            "reply": reply,
             "stocks": [],
             "totalFound": 0,
             "intent": {"maxPrice": None, "minPrice": None, "action": None, "top": 10},
-            "source": "llm" if settings.openai_api_key else "existing-model",
+            "source": "llm" if used_llm else "existing-model",
             "generatedAt": datetime.now(timezone.utc).isoformat(),
             "llm_error": _last_llm_error,
         }
@@ -1323,28 +1391,16 @@ Keep it under 40 words. Then invite them to ask about NSE stock predictions, for
 
 
 async def _llm_smalltalk(message: str) -> str:
-    url, model = _effective_endpoint()
-    headers = {
-        "Authorization": f"Bearer {settings.openai_api_key}",
-        "Content-Type": "application/json",
-    }
-    payload = {
-        "model": model,
-        "temperature": settings.openai_temperature,
-        "max_tokens": 150,
-        "messages": [
-            {"role": "system", "content": SMALLTALK_SYSTEM_PROMPT},
-            {"role": "user", "content": message},
-        ],
-    }
-
-    timeout = httpx.Timeout(30.0)
-    async with httpx.AsyncClient(timeout=timeout) as client:
-        resp = await client.post(url, json=payload, headers=headers)
-        resp.raise_for_status()
-        body = resp.json()
-
-    return body["choices"][0]["message"]["content"].strip()
+    messages = [
+        {"role": "system", "content": SMALLTALK_SYSTEM_PROMPT},
+        {"role": "user", "content": message},
+    ]
+    return await _execute_chat_completion(
+        messages=messages,
+        max_tokens=150,
+        temperature=settings.openai_temperature,
+        timeout_sec=30.0,
+    )
 
 
 def _fallback_smalltalk(message: str, hinglish: bool) -> str:
@@ -1596,12 +1652,6 @@ Rules:
 
 
 async def _llm_general(message: str, history: list | None) -> str:
-    url, model = _effective_endpoint()
-    headers = {
-        "Authorization": f"Bearer {settings.openai_api_key}",
-        "Content-Type": "application/json",
-    }
-
     messages: list[dict] = [{"role": "system", "content": GENERAL_SYSTEM_PROMPT}]
     for turn in (history or [])[-8:]:
         role = turn.get("role")
@@ -1610,20 +1660,12 @@ async def _llm_general(message: str, history: list | None) -> str:
             messages.append({"role": role, "content": content})
     messages.append({"role": "user", "content": message})
 
-    payload = {
-        "model": model,
-        "temperature": settings.openai_temperature,
-        "max_tokens": settings.openai_max_tokens,
-        "messages": messages,
-    }
-
-    timeout = httpx.Timeout(45.0)
-    async with httpx.AsyncClient(timeout=timeout) as client:
-        resp = await client.post(url, json=payload, headers=headers)
-        resp.raise_for_status()
-        body = resp.json()
-
-    return body["choices"][0]["message"]["content"].strip()
+    return await _execute_chat_completion(
+        messages=messages,
+        max_tokens=settings.openai_max_tokens,
+        temperature=settings.openai_temperature,
+        timeout_sec=45.0,
+    )
 
 
 def _fallback_general(message: str, hinglish: bool) -> str:
@@ -1645,9 +1687,6 @@ def _fallback_general(message: str, hinglish: bool) -> str:
 
 async def _general_reply(message: str, history: list | None) -> str:
     hinglish = _hinglish_requested(message)
-    kb = _concept_kb_reply(message)
-    if kb:
-        return kb + _financial_disclaimer(hinglish)
     who = _who_made_you(message)
     if who:
         return who
@@ -1661,4 +1700,7 @@ async def _general_reply(message: str, history: list | None) -> str:
             global _last_llm_error
             _last_llm_error = _format_exc(exc)
             logger.warning("LLM general chat failed, using template: %s", _last_llm_error)
+    kb = _concept_kb_reply(message)
+    if kb:
+        return kb + _financial_disclaimer(hinglish)
     return _fallback_general(message, hinglish) + _financial_disclaimer(hinglish)

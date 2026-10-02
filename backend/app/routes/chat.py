@@ -1,6 +1,8 @@
+import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from app.config import settings
 from app.services.chat_service import process_chat
 
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -26,6 +28,22 @@ class ChatResponse(BaseModel):
     forecasts: dict | None = None
     contexts: dict | None = None
     llm_error: str | None = None
+
+
+@router.get("/models")
+async def list_models():
+    """List available LLM models from the configured provider."""
+    key = (settings.openai_api_key or "").strip()
+    is_groq = key.startswith("gsk_") or "groq" in (settings.openai_base_url or "").lower()
+    base_url = "https://api.groq.com/openai/v1" if is_groq else settings.openai_base_url.rstrip("/")
+    if not key:
+        return {"models": [], "error": "No API key configured"}
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(10.0)) as client:
+            resp = await client.get(f"{base_url}/models", headers={"Authorization": f"Bearer {key}"})
+            return {"status": resp.status_code, "data": resp.json()}
+    except Exception as exc:
+        return {"error": str(exc)}
 
 
 @router.post("", response_model=ChatResponse)
