@@ -60,11 +60,6 @@ logs/
 
 # Research / generated ML artifacts (regenerable offline runs)
 backend/ml_*/
-!backend/ml_cache/
-backend/ml_cache/*
-!backend/ml_cache/forecasts/
-backend/ml_cache/forecasts/*
-!backend/ml_cache/forecasts/*.json
 backend/forecasts/
 backend/predictions/
 

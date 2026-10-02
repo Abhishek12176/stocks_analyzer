@@ -1,7 +1,3 @@
 .env
-!ml_cache/
-ml_cache/*
-!ml_cache/forecasts/
-ml_cache/forecasts/*
-!ml_cache/forecasts/*.json
+ml_cache/
 
