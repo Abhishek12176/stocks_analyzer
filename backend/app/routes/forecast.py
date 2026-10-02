@@ -47,8 +47,38 @@ async def get_stock_forecast(
     except asyncio.TimeoutError:
         logger.warning("forecast timed out for %s", clean)
         result = _graceful(clean, "forecast computation timed out")
-    except Exception as exc:  # noqa: BLE001
-        logger.exception("forecast failed for %s", clean)
-        result = _graceful(clean, f"{type(exc).__name__}: {exc}")
-
     return ForecastResponse(**result)
+
+
+DEFAULT_WARM_SYMBOLS = [
+    "TCS", "RELIANCE", "INFY", "HDFCBANK", "ICICIBANK", "SBIN", "ITC", "BHARTIARTL"
+]
+
+
+@router.post("/warm-cache")
+async def warm_forecast_cache(symbols: list[str] | None = None):
+    """Daily cron endpoint to pre-calculate and warm forecast cache for major stocks."""
+    target_symbols = [clean_symbol(s) for s in (symbols or DEFAULT_WARM_SYMBOLS)]
+    results = {}
+    for s in target_symbols:
+        if not validate_symbol(s):
+            continue
+        try:
+            res = await asyncio.wait_for(
+                asyncio.to_thread(forecast_symbol, s, period="5y", fast=True, enrich=False),
+                timeout=120,
+            )
+            results[s] = {
+                "ok": res.get("is_available", False),
+                "signal": res.get("latest", {}).get("signal"),
+                "as_of": res.get("latest", {}).get("as_of"),
+            }
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("cron warm-cache failed for %s: %s", s, exc)
+            results[s] = {"ok": False, "error": str(exc)}
+
+    return {
+        "status": "completed",
+        "count": len(results),
+        "results": results,
+    }

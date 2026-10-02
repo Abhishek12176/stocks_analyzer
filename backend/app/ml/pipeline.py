@@ -118,36 +118,56 @@ def _forecast_cache_path(symbol: str) -> Path:
     return base / f"{clean_symbol(symbol)}.json"
 
 
-def _forecast_cache_get(
-    symbol: str, as_of: str, fingerprint: str | None = None
-) -> dict[str, Any] | None:
-    """Read a cached forecast, if any.
+_FORECAST_CACHE_TTL_HOURS = 24.0  # Forecast expires after 24h on weekdays (72h on weekends)
 
-    When `fingerprint` is provided the cached record is returned ONLY if its
-    stored ``data_fingerprint`` equals it exactly. A record built from a
-    different input snapshot (or a legacy record that carries no fingerprint)
-    is treated as a cache miss so a different upstream snapshot is never
-    replayed as the same result.
-    """
-    if not as_of:
-        return None
+
+def _is_forecast_expired(rec: dict[str, Any], max_age_hours: float = _FORECAST_CACHE_TTL_HOURS) -> bool:
+    """Check if a cached forecast record has expired based on its generation timestamp."""
+    gen_time_str = rec.get("generated_at")
+    if not gen_time_str:
+        return True
+    try:
+        gen_dt = datetime.fromisoformat(gen_time_str.replace("Z", "+00:00"))
+        now_dt = datetime.now(timezone.utc)
+        age_hours = (now_dt - gen_dt).total_seconds() / 3600.0
+        # Over weekend (Saturday=5, Sunday=6) or Monday morning (0), allow Friday's close up to 72 hours
+        allowed_hours = 72.0 if now_dt.weekday() in (0, 5, 6) else max_age_hours
+        if age_hours > allowed_hours:
+            logger.info("forecast cache expired for record: age=%.1fh > allowed=%.1fh", age_hours, allowed_hours)
+            return True
+        return False
+    except Exception:
+        return True
+
+
+def _forecast_cache_get(
+    symbol: str, as_of: str | None = None, fingerprint: str | None = None
+) -> dict[str, Any] | None:
+    """Read a cached forecast, if any, verifying it is not expired."""
     try:
         with open(_forecast_cache_path(symbol), "r", encoding="utf-8") as fh:
             data = json.load(fh)
         if data.get("version") != _FORECAST_CACHE_VERSION:
             return None
         items = data.get("items") or {}
-        rec = items.get(as_of)
-        if isinstance(rec, dict):
-            if fingerprint is None or rec.get("data_fingerprint") == fingerprint:
+        if not items:
+            return None
+
+        # 1. Check exact requested date if given
+        if as_of and as_of != "latest" and as_of in items:
+            rec = items[as_of]
+            if isinstance(rec, dict) and not _is_forecast_expired(rec):
+                if fingerprint is None or rec.get("data_fingerprint") == fingerprint:
+                    return rec
                 return rec
+
+        # 2. Fallback to latest available cached date if still valid
+        latest_key = sorted(items.keys())[-1]
+        rec = items[latest_key]
+        if isinstance(rec, dict) and not _is_forecast_expired(rec):
+            logger.info("forecast cache hit (as_of %s) for %s", latest_key, symbol)
             return rec
-        if items:
-            latest_key = sorted(items.keys())[-1]
-            rec = items[latest_key]
-            if isinstance(rec, dict):
-                logger.info("forecast cache fallback to latest as_of %s for %s", latest_key, symbol)
-                return rec
+
         return None
     except (OSError, ValueError, TypeError):
         return None

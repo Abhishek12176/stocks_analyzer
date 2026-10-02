@@ -1,0 +1,64 @@
+name: Daily Forecast Cron Update
+
+on:
+  schedule:
+    # Runs Monday to Friday at 11:30 UTC (5:00 PM IST) — 1.5 hours after NSE close
+    - cron: '30 11 * * 1-5'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  update-forecasts:
+    name: Warm & Update Live ML Forecast Cache
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Trigger Render Backend Forecast Warmup
+        run: |
+          python - << 'EOF'
+          import urllib.request
+          import json
+          import time
+
+          RENDER_URL = "https://stocks-analyzer-9fg7.onrender.com"
+          symbols = ["TCS", "RELIANCE", "INFY", "HDFCBANK", "ICICIBANK", "SBIN", "ITC", "BHARTIARTL"]
+
+          print(f"Triggering daily forecast warmup on {RENDER_URL} for {len(symbols)} stocks...")
+          
+          # First, wake up Render instance with /api/health
+          try:
+              req = urllib.request.Request(f"{RENDER_URL}/api/health", headers={"User-Agent": "GitHub-Cron/1.0"})
+              with urllib.request.urlopen(req, timeout=60) as resp:
+                  print("Health check response:", resp.status, resp.read().decode())
+          except Exception as e:
+              print(f"Health ping notice: {e}")
+
+          # Warm each stock sequentially to prevent overwhelming free tier memory
+          for sym in symbols:
+              t0 = time.time()
+              url = f"{RENDER_URL}/api/v1/stock/{sym}/forecast?fast=true"
+              try:
+                  print(f"Warming forecast for {sym}...")
+                  req = urllib.request.Request(url, headers={"User-Agent": "GitHub-Cron/1.0"})
+                  with urllib.request.urlopen(req, timeout=120) as resp:
+                      data = json.loads(resp.read().decode())
+                      elapsed = time.time() - t0
+                      available = data.get("is_available")
+                      sig = data.get("latest", {}).get("signal")
+                      as_of = data.get("latest", {}).get("as_of")
+                      prob = data.get("latest", {}).get("probability")
+                      print(f"  -> {sym}: OK in {elapsed:.1f}s | AsOf: {as_of} | Signal: {sig} | P(up): {prob}")
+              except Exception as err:
+                  print(f"  -> {sym}: Request failed ({err})")
+              time.sleep(2)
+
+          print("\nDaily forecast warmup completed successfully!")
+          EOF
