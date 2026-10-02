@@ -939,29 +939,48 @@ def _build_llm_messages(message: str, stocks: list[dict], history: list | None,
 _last_llm_error: str | None = None
 
 
+VALID_GROQ_MODELS = {
+    "llama-3.1-8b-instant",
+    "llama-3.3-70b-versatile",
+    "llama-3.1-70b-versatile",
+    "llama3-70b-8192",
+    "llama3-8b-8192",
+    "mixtral-8x7b-32768",
+    "gemma2-9b-it",
+}
+
+
 def _effective_endpoint() -> tuple[str, str]:
     """Returns (chat_completions_url, model).
     
-    Auto-detects Groq keys (gsk_*) to prevent routing them to OpenAI when
-    OPENAI_BASE_URL is left at its default 'https://api.openai.com/v1'.
-    Also translates decommissioned groq/compound models to llama-3.1-8b-instant.
+    Guarantees valid routing:
+    - If key is a Groq key (gsk_*) or base_url is Groq: forces valid Groq endpoint & model.
+    - If model is invalid for Groq (e.g. 'openai', 'groq', 'compound', 'gpt-*'),
+      automatically uses 'llama-3.1-8b-instant'.
     """
     key = (settings.openai_api_key or "").strip()
     base_url = (settings.openai_base_url or "").strip().rstrip("/")
     model = (settings.openai_model or "").strip()
 
-    if key.startswith("gsk_") and "openai.com" in base_url:
+    is_groq = key.startswith("gsk_") or "groq" in base_url.lower()
+
+    if is_groq:
         base_url = "https://api.groq.com/openai/v1"
-        if not model or model.startswith("gpt-") or "compound" in model:
+        if model not in VALID_GROQ_MODELS:
             model = "llama-3.1-8b-instant"
-
-    if model in ("groq/compound", "groq/compound-mini"):
-        model = "llama-3.1-8b-instant"
-
-    if not model:
-        model = "llama-3.1-8b-instant" if "groq" in base_url else "gpt-4o-mini"
+    elif not model:
+        model = "gpt-4o-mini"
 
     return f"{base_url}/chat/completions", model
+
+
+def _format_exc(exc: Exception) -> str:
+    if isinstance(exc, httpx.HTTPStatusError):
+        try:
+            return f"HTTP {exc.response.status_code}: {exc.response.text}"
+        except Exception:
+            pass
+    return f"{type(exc).__name__}: {exc}"
 
 
 async def _llm_reply(message: str, stocks: list[dict], history: list | None,
@@ -1262,8 +1281,8 @@ async def process_chat(message: str, history: list | None = None) -> dict:
             )
             used_llm = True
         except Exception as exc:
-            _last_llm_error = f"{type(exc).__name__}: {exc}"
-            logger.warning("LLM chat failed, falling back to template: %s", exc)
+            _last_llm_error = _format_exc(exc)
+            logger.warning("LLM chat failed, falling back to template: %s", _last_llm_error)
             reply = None
 
     if not reply:
@@ -1411,8 +1430,8 @@ async def _smalltalk_reply(message: str) -> str:
         try:
             return await _llm_smalltalk(message)
         except Exception as exc:
-            _last_llm_error = f"{type(exc).__name__}: {exc}"
-            logger.warning("LLM smalltalk failed, using template: %s", exc)
+            _last_llm_error = _format_exc(exc)
+            logger.warning("LLM smalltalk failed, using template: %s", _last_llm_error)
     return _fallback_smalltalk(message, _hinglish_requested(message))
 
 
@@ -1640,6 +1659,6 @@ async def _general_reply(message: str, history: list | None) -> str:
             return (await _llm_general(message, history)) + _financial_disclaimer(hinglish)
         except Exception as exc:
             global _last_llm_error
-            _last_llm_error = f"{type(exc).__name__}: {exc}"
-            logger.warning("LLM general chat failed, using template: %s", exc)
+            _last_llm_error = _format_exc(exc)
+            logger.warning("LLM general chat failed, using template: %s", _last_llm_error)
     return _fallback_general(message, hinglish) + _financial_disclaimer(hinglish)
