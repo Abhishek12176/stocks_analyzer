@@ -36,10 +36,11 @@ async def get_stock_forecast(
     if not validate_symbol(clean):
         raise InvalidSymbolError(symbol)
 
+    period = "5y" if fast else "10y"
     try:
         result = await asyncio.wait_for(
             asyncio.to_thread(
-                forecast_symbol, clean, period="10y", fast=bool(fast), enrich=bool(enrich)
+                forecast_symbol, clean, period=period, fast=bool(fast), enrich=bool(enrich)
             ),
             timeout=_TIMEOUT,
         )

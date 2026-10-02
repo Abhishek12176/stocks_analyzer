@@ -36,14 +36,40 @@ export function ForecastCard({ forecast, loading, retrying, error, errorMessage,
 
   if (loading || retrying) {
     return (
-      <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 backdrop-blur-sm p-6 space-y-4">
-        <Skeleton className="h-5 w-48" />
+      <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 backdrop-blur-sm p-6 space-y-5">
+        <div className="flex items-center justify-between border-b border-neutral-800/80 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="relative flex size-4 items-center justify-center">
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-accent-500 opacity-75"></span>
+              <span className="relative inline-flex size-2 rounded-full bg-accent-500"></span>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-neutral-200">
+                20-Day ML Forecast Model Running...
+              </h3>
+              <p className="text-xs text-neutral-400">
+                Evaluating walk-forward ensemble models (Logistic + Random Forest) & market regime
+              </p>
+            </div>
+          </div>
+          <span className="text-xs font-mono text-neutral-400 bg-neutral-800/80 px-2.5 py-1 rounded-md border border-neutral-700/50">
+            {retrying ? "Retrying..." : "Computing..."}
+          </span>
+        </div>
         <div className="flex items-center gap-6">
           <Skeleton className="size-[72px] rounded-full" />
           <div className="space-y-2 flex-1">
-            <Skeleton className="h-8 w-32" />
-            <Skeleton className="h-4 w-56" />
+            <Skeleton className="h-8 w-36" />
+            <Skeleton className="h-4 w-64" />
           </div>
+        </div>
+        <div className="space-y-2 pt-1">
+          <div className="h-1.5 w-full bg-neutral-800 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-accent-500/40 via-accent-500 to-accent-500/40 animate-pulse w-3/4 rounded-full" />
+          </div>
+          <p className="text-[11px] text-neutral-500 text-center">
+            Pehli baar calculate hone me thoda samay lagta hai, uske baad data 1 second me load hota hai.
+          </p>
         </div>
         <Skeleton className="h-32 rounded-xl" />
         <Skeleton className="h-28 rounded-xl" />
@@ -55,21 +81,21 @@ export function ForecastCard({ forecast, loading, retrying, error, errorMessage,
     if (error) {
       return (
         <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 backdrop-blur-sm px-6 py-10 flex flex-col items-center text-center">
-          <div className="mb-4 size-12 rounded-xl border border-dashed border-neutral-700 flex items-center justify-center text-neutral-600">
+          <div className="mb-4 size-12 rounded-xl border border-dashed border-neutral-700 flex items-center justify-center text-neutral-500">
             <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
             </svg>
           </div>
-          <h3 className="text-base font-semibold text-neutral-300">Forecast load failed</h3>
-          <p className="mt-1 text-sm text-neutral-500 max-w-sm">
-            {errorMessage || "Forecast abhi generate na hua. Backend pehli baar model train kar raha hai (thoda time lagta hai) — Retry dabayein."}
+          <h3 className="text-base font-semibold text-neutral-300">Forecast Loading Delay</h3>
+          <p className="mt-1 text-sm text-neutral-400 max-w-sm">
+            {errorMessage || "Cloud server response delay ki wajah se data aane me samay lag raha hai. Kripya Retry dabayein."}
           </p>
           {onRetry && (
             <button
               onClick={onRetry}
-              className="mt-6 rounded-xl bg-accent-500/10 px-5 py-2.5 text-sm font-medium text-accent-500 border border-accent-500/20 hover:bg-accent-500/20 transition-colors"
+              className="mt-6 rounded-xl bg-accent-500/20 px-6 py-2.5 text-sm font-semibold text-accent-400 border border-accent-500/30 hover:bg-accent-500/30 transition-all shadow-lg cursor-pointer"
             >
-              Retry Forecast
+              🔄 Retry Forecast
             </button>
           )}
         </div>

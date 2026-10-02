@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 const BACKEND_URL = process.env.BACKEND_URL || "https://stocks-analyzer-9fg7.onrender.com";
 
 const FETCH_TIMEOUT = 240_000;
+export const maxDuration = 60;
 
 async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
   const controller = new AbortController();

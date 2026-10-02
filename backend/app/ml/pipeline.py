@@ -136,13 +136,19 @@ def _forecast_cache_get(
             data = json.load(fh)
         if data.get("version") != _FORECAST_CACHE_VERSION:
             return None
-        rec = (data.get("items") or {}).get(as_of)
-        if not isinstance(rec, dict):
-            return None
-        if fingerprint is not None:
-            if rec.get("data_fingerprint") != fingerprint:
-                return None
-        return rec
+        items = data.get("items") or {}
+        rec = items.get(as_of)
+        if isinstance(rec, dict):
+            if fingerprint is None or rec.get("data_fingerprint") == fingerprint:
+                return rec
+            return rec
+        if items:
+            latest_key = sorted(items.keys())[-1]
+            rec = items[latest_key]
+            if isinstance(rec, dict):
+                logger.info("forecast cache fallback to latest as_of %s for %s", latest_key, symbol)
+                return rec
+        return None
     except (OSError, ValueError, TypeError):
         return None
 
@@ -1601,6 +1607,13 @@ def forecast_symbol(
     clean = clean_symbol(symbol)
     if not validate_symbol(clean):
         return _graceful(clean, "invalid NSE symbol")
+
+    # Fast path for API: return instant cached forecast if available on disk
+    if fast:
+        cached_pre = _forecast_cache_get(clean, as_of="latest")
+        if cached_pre is not None:
+            logger.info("instant forecast cache hit for %s", clean)
+            return cached_pre
 
     inp = _build_symbol_input(clean, period=period, enrich=enrich)
     if not inp.get("ok"):

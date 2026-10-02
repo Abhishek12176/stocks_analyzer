@@ -79,7 +79,9 @@ export default function StockDetailPage() {
     isError: forecastError,
     error: forecastErrorObj,
     refetch: refetchForecast,
-  } = useForecast(symbol, { enabled: !analysisData?.forecast });
+  } = useForecast(symbol, {
+    enabled: (activeTab === "forecast" || Boolean(analysisData?.forecast)) && !analysisData?.forecast,
+  });
 
   useEffect(() => {
     if (!symbol) return;
