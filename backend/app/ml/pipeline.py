@@ -757,8 +757,8 @@ def forecast_frame(
     keep = [c for c in keep if X[c].nunique(dropna=True) > 1]
     X = X[keep]
 
-    test_size = 40 if fast else OOF_TEST_SIZE
-    step = 90 if fast else OOF_STEP
+    test_size = 60 if fast else OOF_TEST_SIZE
+    step = 180 if fast else OOF_STEP
     folds = bt.purged_walk_forward_splits(
         index, test_size=test_size, step=step,
         min_train=OOF_MIN_TRAIN, embargo=horizon,

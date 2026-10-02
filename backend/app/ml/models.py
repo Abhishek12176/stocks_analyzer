@@ -134,8 +134,8 @@ def model_names() -> list[str]:
 # Training / prediction helpers
 # ---------------------------------------------------------------------------
 
-DEFAULT_RF = dict(n_estimators=300, max_depth=8, min_samples_leaf=30,
-                  class_weight="balanced", n_jobs=-1)
+DEFAULT_RF = dict(n_estimators=50, max_depth=8, min_samples_leaf=30,
+                  class_weight="balanced", n_jobs=1)
 DEFAULT_XGB = dict(n_estimators=200, max_depth=4, learning_rate=0.05,
                    subsample=0.8, colsample_bytree=0.8, tree_method="hist",
                    n_jobs=1, eval_metric="logloss")
