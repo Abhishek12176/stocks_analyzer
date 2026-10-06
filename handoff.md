@@ -1751,3 +1751,13 @@ All 10 master tasks done + post-Task-10 chat/screening intelligence + forecast U
       Pass = improvement still holds (expected median cumRet −20.06% → −4.97%); then fallback
       `forecast_symbol` smoke: `threshold_buy` should read 0.66/0.72/0.64/0.72 (cache version 2).
       Revert = empty `settings.ml_per_symbol_buy_thresholds` (one line).
+
+### Chatbot Groq LLM Update (06-Oct-2026) — DONE
+- Configured Groq API key in `backend/.env` with `OPENAI_MODEL=qwen/qwen3.8-27b`.
+- Enhanced `backend/app/services/chat_service.py`:
+  - Added active Groq model `qwen/qwen3.8-27b` to `VALID_GROQ_MODELS` and `PREFERRED_GROQ_MODELS`.
+  - Filtered out non-chat / audio models (`canopylabs`, `orpheus`, etc.) in `_discover_groq_model`.
+  - Added robust error-handling for decommissioned models (HTTP 400 `model_decommissioned`) so candidate fallback seamlessly transitions to next model.
+  - Candidate list prioritizes user's `configured_model` from `.env`.
+- Tests: full backend test suite executed and passed (500+ tests passed, 0 failed, 3 skipped). Chatbot verified live across smalltalk, concept Q&A, and live stock analysis queries.
+

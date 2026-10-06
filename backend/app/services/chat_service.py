@@ -940,6 +940,8 @@ _last_llm_error: str | None = None
 _active_groq_model: str | None = None
 
 VALID_GROQ_MODELS = {
+    "qwen/qwen3.8-27b",
+    "qwen-2.5-32b",
     "llama-3.3-70b-versatile",
     "llama-3.1-8b-instant",
     "llama-3.1-70b-versatile",
@@ -947,16 +949,14 @@ VALID_GROQ_MODELS = {
     "llama3-8b-8192",
     "mixtral-8x7b-32768",
     "gemma2-9b-it",
-    "qwen-2.5-32b",
     "deepseek-r1-distill-llama-70b",
 }
 
 PREFERRED_GROQ_MODELS = [
+    "qwen/qwen3.8-27b",
     "llama-3.3-70b-versatile",
     "llama-3.1-8b-instant",
-    "llama-3.1-70b-versatile",
-    "llama3-70b-8192",
-    "llama3-8b-8192",
+    "qwen-2.5-32b",
     "mixtral-8x7b-32768",
     "gemma2-9b-it",
 ]
@@ -982,7 +982,7 @@ async def _discover_groq_model(client: httpx.AsyncClient, headers: dict) -> str 
                 if pref in avail_ids:
                     return pref
             for m_id in avail_ids:
-                if not any(x in m_id.lower() for x in ("whisper", "guard", "embed", "tts", "moderation", "vision")):
+                if not any(x in m_id.lower() for x in ("whisper", "guard", "embed", "tts", "moderation", "vision", "canopylabs", "orpheus")):
                     return m_id
     except Exception as exc:
         logger.debug("Groq model discovery failed: %s", exc)
@@ -1016,17 +1016,17 @@ async def _execute_chat_completion(
 
     async with httpx.AsyncClient(timeout=httpx.Timeout(timeout_sec)) as client:
         candidates: list[str] = []
-        if _active_groq_model:
+        configured_model = (settings.openai_model or "").strip()
+        if configured_model and configured_model not in candidates:
+            candidates.append(configured_model)
+
+        if _active_groq_model and _active_groq_model not in candidates:
             candidates.append(_active_groq_model)
 
         if not _active_groq_model:
             discovered = await _discover_groq_model(client, headers)
             if discovered and discovered not in candidates:
                 candidates.append(discovered)
-
-        configured_model = (settings.openai_model or "").strip()
-        if configured_model and configured_model in VALID_GROQ_MODELS and configured_model not in candidates:
-            candidates.append(configured_model)
 
         for m in PREFERRED_GROQ_MODELS:
             if m not in candidates:
@@ -1047,8 +1047,17 @@ async def _execute_chat_completion(
                 return resp.json()["choices"][0]["message"]["content"].strip()
             except httpx.HTTPStatusError as err:
                 last_error = err
-                if err.response.status_code == 404:
-                    logger.warning("Groq model %s returned 404, trying next candidate...", cand)
+                err_text = ""
+                try:
+                    err_text = err.response.text.lower()
+                except Exception:
+                    pass
+                is_model_unavail = (
+                    err.response.status_code == 404
+                    or (err.response.status_code == 400 and any(w in err_text for w in ("decommissioned", "does not exist", "not found", "model")))
+                )
+                if is_model_unavail:
+                    logger.warning("Groq model %s unavailable (%s), trying next candidate...", cand, err.response.status_code)
                     if _active_groq_model == cand:
                         _active_groq_model = None
                     continue
